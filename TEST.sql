@@ -86,7 +86,8 @@ IF OBJECT_ID('LOREM_IPSUM.Marca_producto','U') IS NOT NULL
 
 IF OBJECT_ID('LOREM_IPSUM.Promocion','U') IS NOT NULL
     DROP TABLE LOREM_IPSUM.Promocion;
-
+GO
+    
 -------------------- Eliminación del esquema ---------------------------
 
 DROP SCHEMA IF EXISTS LOREM_IPSUM
