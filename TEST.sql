@@ -361,6 +361,9 @@ ADD CONSTRAINT PK_Promocion PRIMARY KEY (promo_cod);
 ALTER TABLE LOREM_IPSUM.Producto
 ADD CONSTRAINT PK_Producto PRIMARY KEY (prod_cod);
 
+ALTER TABLE LOREM_IPSUM.Prod_Ticket
+ADD CONSTRAINT PK_PT_ticket PRIMARY KEY (PT_ticket)
+
 ALTER TABLE LOREM_IPSUM.Programacion_Envio
 ADD CONSTRAINT PK_Programacion_Envio PRIMARY KEY (prog_env_codigo);
 
@@ -535,8 +538,4 @@ FOREIGN KEY (desc_MP_apli_pago) REFERENCES LOREM_IPSUM.Pago(pago_nro);
 ALTER TABLE LOREM_IPSUM.Descuento_MP_Aplicado
 ADD CONSTRAINT FK_Desc_MP_Aplicado_Descuento
 FOREIGN KEY (desc_MP_apli_descuento) REFERENCES LOREM_IPSUM.Descuento_Medio_pago(desc_cod);
-
-
-
-
 
