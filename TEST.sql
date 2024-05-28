@@ -235,7 +235,7 @@ CREATE TABLE LOREM_IPSUM.Promocion_x_ProductoTicket(
 
 
 CREATE TABLE LOREM_IPSUM.Programacion_Envio(
-    prog_env_codigo                  DECIMAL(10,0) NOT NULL,
+    prog_env_codigo                  DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     prog_env_fecha_programacion      DATE,
     prog_env_hs_inicio               TIME,
     prog_env_hr_fin                  TIME
@@ -243,12 +243,12 @@ CREATE TABLE LOREM_IPSUM.Programacion_Envio(
 
 
 CREATE TABLE LOREM_IPSUM.Estado_Envio(
-    estado_env_cod      DECIMAL(10,0) NOT NULL,
+    estado_env_cod      DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     estado_env_detalle  NVARCHAR(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Cliente(
-    clie_nro                DECIMAL(10,0) NOT NULL,
+    clie_nro                DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     clie_localidad          DECIMAL(10,0) NOT NULL,
     clie_nombre             NVARCHAR(50),
     clie_apellido           NVARCHAR(50),
@@ -260,43 +260,39 @@ CREATE TABLE LOREM_IPSUM.Cliente(
 )
 
 CREATE TABLE LOREM_IPSUM.Envio(
-    envio_nro                   DECIMAL(10,0) NOT NULL,
+    envio_nro                   DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     envio_ticket                DECIMAL(10,0) NOT NULL,
     envio_clie                  DECIMAL(10,0) NOT NULL,
     envio_programacion          DECIMAL(10,0) NOT NULL,
     envio_costo                 DECIMAL(10,0),
-    envio_estado                DECIMAL,
-    envio_entrega               TIMESTAMP
-
+    envio_estado                DECIMAL
 )
 
 CREATE TABLE LOREM_IPSUM.Tarjeta(
     tarjeta_nro         NVARCHAR(10)    NOT NULL,
     tarjeta_clie        DECIMAL(10,0)   NOT NULL,
     tarjeta_vto         DATE,
-    tarjeta_tipo        NVARCHAR(255),
-    tarjeta_detalle     NVARCHAR(255)
+    tarjeta_detalle     DECIMAL(10,0)
 )
 
 
 CREATE TABLE LOREM_IPSUM.Tipo_Medio_Pago(
-    TMP_tipo        DECIMAL(10,0) NOT NULL,
+    TMP_tipo        DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     TMP_detalle     NVARCHar(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Medio_pago(
-    MP_cod         DECIMAL(10,0) NOT NULL,
+    MP_cod         DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     MP_tipo        DECIMAL(10,0) NOT NULL,
     MP_detalle     NVARCHAR(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Pago(
-    pago_nro                DECIMAL(10,0) NOT NULL,
+    pago_nro                DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     pago_mp                 DECIMAL(10,0) NOT NULL,
     pago_ticket             DECIMAL(10,0) NOT NULL,
     pago_tarjeta            NVARCHAR(10),
-    pago_fecha              TIMESTAMP,
-    pago_desc_aplicados     DECIMAL(18,2),
+    pago_fecha              DATETIME,
     pago_importe            DECIMAL(18,2),
     pago_cuotas             DECIMAL(2,0)
 )
@@ -539,4 +535,136 @@ FOREIGN KEY (desc_MP_apli_pago) REFERENCES LOREM_IPSUM.Pago(pago_nro);
 ALTER TABLE LOREM_IPSUM.Descuento_MP_Aplicado
 ADD CONSTRAINT FK_Desc_MP_Aplicado_Descuento
 FOREIGN KEY (desc_MP_apli_descuento) REFERENCES LOREM_IPSUM.Descuento_Medio_pago(desc_cod);
+
+-------------------- Migración de tablas ---------------------------
+
+-- Migración de Estado_Envio
+
+INSERT INTO LOREM_IPSUM.Estado_Envio (estado_env_detalle)
+SELECT CAST(ENVIO_ESTADO AS NVARCHAR(50))
+FROM gd_esquema.Maestra
+WHERE ENVIO_ESTADO IS NOT NULL
+GROUP BY ENVIO_ESTADO
+
+-- Migración de Programacion_Envio
+
+INSERT INTO LOREM_IPSUM.Programacion_Envio (prog_env_fecha_programacion, prog_env_hs_inicio, prog_env_hr_fin)
+SELECT CAST(ENVIO_FECHA_ENTREGA AS DATE),
+       CONVERT(TIME,
+               RIGHT('0' + CAST(FLOOR(ENVIO_HORA_INICIO / 100) AS VARCHAR(2)), 2) + ':' +
+               RIGHT('0' + CAST(ENVIO_HORA_INICIO % 100 AS VARCHAR(2)), 2) + ':00'),
+       CONVERT(TIME,
+               RIGHT('0' + CAST(FLOOR(ENVIO_HORA_FIN / 100) AS VARCHAR(2)), 2) + ':' +
+               RIGHT('0' + CAST(ENVIO_HORA_FIN % 100 AS VARCHAR(2)), 2) + ':00')
+FROM gd_esquema.Maestra
+WHERE ENVIO_FECHA_ENTREGA IS NOT NULL
+  AND ENVIO_HORA_INICIO IS NOT NULL
+  AND ENVIO_HORA_FIN IS NOT NULL
+GROUP BY ENVIO_FECHA_ENTREGA, ENVIO_HORA_INICIO, ENVIO_HORA_FIN;
+
+-- Migración de Tipo_Medio_Pago
+
+INSERT INTO LOREM_IPSUM.Tipo_Medio_Pago (TMP_detalle)
+SELECT PAGO_TIPO_MEDIO_PAGO
+FROM  gd_esquema.Maestra
+WHERE PAGO_TIPO_MEDIO_PAGO IS NOT NULL
+GROUP BY PAGO_TIPO_MEDIO_PAGO
+ORDER BY PAGO_TIPO_MEDIO_PAGO
+
+-- Migración de Medio_pago (necesita migrada -> Tipo_Medio_Pago)
+
+INSERT INTO LOREM_IPSUM.Medio_pago (MP_tipo, MP_detalle)
+SELECT (SELECT TMP_tipo FROM LOREM_IPSUM.Tipo_Medio_Pago WHERE TMP_detalle = PAGO_TIPO_MEDIO_PAGO),
+       PAGO_MEDIO_PAGO
+FROM  gd_esquema.Maestra
+WHERE PAGO_MEDIO_PAGO IS NOT NULL
+GROUP BY PAGO_TIPO_MEDIO_PAGO, PAGO_MEDIO_PAGO
+ORDER BY PAGO_MEDIO_PAGO
+
+-- Migración de Descuento_Medio_pago (necesita migrada -> Medio_pago)
+
+INSERT INTO LOREM_IPSUM.Descuento_Medio_pago (desc_cod, desc_medio_pago, desc_descripcion, desc_medio_pago_inicio,
+                                              desc_medio_pago_fin, desc_descuento_mp, desc_medio_pago_tope)
+SELECT DESCUENTO_CODIGO,
+       (SELECT MP_cod FROM LOREM_IPSUM.Medio_pago WHERE MP_detalle = PAGO_MEDIO_PAGO), -- Buscar el medio de pago en la tabla de Medio_pago
+       DESCUENTO_DESCRIPCION,
+       DESCUENTO_FECHA_INICIO,
+       DESCUENTO_FECHA_FIN,
+       DESCUENTO_PORCENTAJE_DESC,
+       DESCUENTO_TOPE
+FROM gd_esquema.Maestra
+WHERE DESCUENTO_CODIGO IS NOT NULL
+GROUP BY DESCUENTO_CODIGO, PAGO_MEDIO_PAGO, DESCUENTO_DESCRIPCION, DESCUENTO_FECHA_INICIO, DESCUENTO_FECHA_FIN,
+         DESCUENTO_PORCENTAJE_DESC, DESCUENTO_TOPE
+
+-- Migración de Cliente (necesita migrada -> localidad y provincia)
+
+/*INSERT INTO LOREM_IPSUM.Cliente (clie_nombre, clie_apellido, clie_dni, clie_fecha_nacimiento, clie_fecha_registro,
+                                 clie_mail, clie_domicilio, clie_localidad)
+SELECT CLIENTE_NOMBRE,
+       CLIENTE_APELLIDO,
+       CLIENTE_DNI,
+       CLIENTE_FECHA_NACIMIENTO,
+       CLIENTE_FECHA_REGISTRO,
+       CLIENTE_MAIL,
+       CLIENTE_DOMICILIO,
+       (SELECT localidad_cod
+        FROM LOREM_IPSUM.Localidad
+                 JOIN LOREM_IPSUM.Provincia ON localidad_prov = Provincia.prov_cod
+        WHERE localidad_nombre = CLIENTE_LOCALIDAD
+          AND prov_nombre = CLIENTE_PROVINCIA)
+FROM gd_esquema.Maestra
+WHERE Maestra.CLIENTE_NOMBRE IS NOT NULL
+GROUP BY CLIENTE_NOMBRE, CLIENTE_APELLIDO, CLIENTE_DNI, CLIENTE_FECHA_NACIMIENTO, CLIENTE_FECHA_REGISTRO, CLIENTE_MAIL,
+         CLIENTE_DOMICILIO, CLIENTE_LOCALIDAD, CLIENTE_PROVINCIA*/
+
+-- Migración de Tarjeta (necesita migrada -> Tipo_Medio_Pago, Medio_pago y Cliente)
+
+/*INSERT INTO LOREM_IPSUM.Tarjeta (tarjeta_nro, tarjeta_vto, tarjeta_clie, tarjeta_detalle)
+
+SELECT PAGO_TARJETA_NRO,
+       PAGO_TARJETA_FECHA_VENC,
+       (SELECT clie_nro FROM LOREM_IPSUM.Cliente WHERE clie_dni = CLIENTE_DNI),
+       (SELECT MP_cod FROM LOREM_IPSUM.Medio_pago WHERE MP_detalle = PAGO_MEDIO_PAGO)
+FROM gd_esquema.Maestra
+WHERE PAGO_TARJETA_NRO IS NOT NULL
+GROUP BY PAGO_TARJETA_NRO, PAGO_TARJETA_FECHA_VENC, CLIENTE_DNI, PAGO_MEDIO_PAGO*/
+
+-- Migración de Pago (necesita migrada -> Medio_pago, Ticket(externa), Tarjeta)
+
+/*INSERT INTO LOREM_IPSUM.Pago (pago_importe, pago_cuotas, pago_fecha, pago_ticket, pago_tarjeta, pago_mp)
+
+SELECT PAGO_IMPORTE,
+       PAGO_TARJETA_CUOTAS,
+       PAGO_FECHA,
+       (SELECT ticket_nro FROM LOREM_IPSUM.Ticket WHERE ticket_nro = TICKET_NUMERO),
+       (SELECT tarjeta_nro FROM LOREM_IPSUM.Tarjeta WHERE tarjeta_nro = PAGO_TARJETA_NRO),
+       (SELECT MP_cod FROM LOREM_IPSUM.Medio_pago WHERE MP_detalle = PAGO_MEDIO_PAGO)
+FROM gd_esquema.Maestra
+WHERE PAGO_IMPORTE IS NOT NULL
+GROUP BY PAGO_IMPORTE, PAGO_TARJETA_CUOTAS, PAGO_FECHA, TICKET_NUMERO, PAGO_TARJETA_NRO, PAGO_MEDIO_PAGO*/
+
+-- Migración de Descuento_MP_Aplicado (necesita migrada -> Pago, Descuento_Medio_pago)
+
+/*INSERT INTO LOREM_IPSUM.Descuento_MP_Aplicado (desc_MP_apli_monto, desc_MP_apli_pago, desc_MP_apli_descuento)
+
+SELECT PAGO_DESCUENTO_APLICADO,
+       (SELECT pago_nro FROM LOREM_IPSUM.Pago WHERE pago_tarjeta = PAGO_TARJETA_NRO),
+       (SELECT desc_cod FROM LOREM_IPSUM.Descuento_Medio_pago WHERE desc_cod = DESCUENTO_CODIGO)
+FROM gd_esquema.Maestra
+WHERE PAGO_DESCUENTO_APLICADO IS NOT NULL
+GROUP BY PAGO_DESCUENTO_APLICADO*/
+
+-- Migración de Envio (necesita migrada -> Cliente, Programacion_Envio, Estado_Envio)
+
+/*INSERT INTO LOREM_IPSUM.Envio (envio_ticket, envio_costo, envio_clie, envio_programacion, envio_estado);
+
+SELECT TICKET_NUMERO,
+       ENVIO_COSTO,
+       (SELECT clie_nro FROM LOREM_IPSUM.Cliente WHERE clie_dni = CLIENTE_DNI),
+       (SELECT prog_env_codigo FROM LOREM_IPSUM.Programacion_Envio WHERE prog_env_fecha_programacion = ENVIO_FECHA_ENTREGA AND prog_env_hs_inicio = ENVIO_HORA_INICIO AND prog_env_hr_fin = ENVIO_HORA_FIN),
+       (SELECT estado_env_cod FROM LOREM_IPSUM.Estado_Envio WHERE estado_env_detalle = ENVIO_ESTADO)
+FROM gd_esquema.Maestra
+WHERE ENVIO_COSTO IS NOT NULL
+GROUP BY TICKET_NUMERO, ENVIO_COSTO, ENVIO_FECHA_ENTREGA*/
 
