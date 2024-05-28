@@ -86,8 +86,7 @@ IF OBJECT_ID('LOREM_IPSUM.Marca_producto','U') IS NOT NULL
 
 IF OBJECT_ID('LOREM_IPSUM.Promocion','U') IS NOT NULL
     DROP TABLE LOREM_IPSUM.Promocion;
-GO
-    
+
 -------------------- Eliminación del esquema ---------------------------
 
 DROP SCHEMA IF EXISTS LOREM_IPSUM
@@ -106,14 +105,14 @@ CREATE TABLE LOREM_IPSUM.Provincia (
 );
 
 CREATE TABLE LOREM_IPSUM.Localidad(
-    localidad_cod       DECIMAL(10,0)   NOT NULL,
+    localidad_cod       INT IDENTITY(1,1) NOT NULL,
     localidad_prov      INT    NOT NULL,
     localidad_nombre    NVARCHAR(55)
 )
 
 CREATE TABLE LOREM_IPSUM.Supermercado(
     super_cuit              DECIMAL(13,0) NOT NULL,
-    super_localidad         DECIMAL(10,0) NOT NULL,
+    super_localidad         INT NOT NULL,
     super_nombre            NVARCHAR(255),
     super_iibb              NVARCHAR(255),
     super_domicilio         NVARCHAR(255),
@@ -123,7 +122,7 @@ CREATE TABLE LOREM_IPSUM.Supermercado(
 
 CREATE TABLE LOREM_IPSUM.Sucursal(
     suc_cod         DECIMAL(10,0) NOT NULL,
-    suc_localidad   DECIMAL(10,0) NOT NULL,
+    suc_localidad   INT NOT NULL,
     suc_super       DECIMAL(13,0) NOT NULL,
     suc_nombre      NVARCHAR(255),
     suc_direccion   NVARCHAR(255)
@@ -249,7 +248,7 @@ CREATE TABLE LOREM_IPSUM.Estado_Envio(
 
 CREATE TABLE LOREM_IPSUM.Cliente(
     clie_nro                DECIMAL(10,0) NOT NULL,
-    clie_localidad          DECIMAL(10,0) NOT NULL,
+    clie_localidad          INT NOT NULL,
     clie_nombre             NVARCHAR(50),
     clie_apellido           NVARCHAR(50),
     clie_dni                DECIMAL(10,0),
@@ -559,3 +558,23 @@ SELECT DISTINCT SUPER_PROVINCIA
 FROM gd_esquema.Maestra
 WHERE SUPER_PROVINCIA IS NOT NULL;
 
+
+INSERT INTO LOREM_IPSUM.Localidad (localidad_nombre, localidad_prov)
+SELECT DISTINCT SUCURSAL_LOCALIDAD AS localidad_nombre, prov_cod 
+FROM gd_esquema.Maestra
+join LOREM_IPSUM.Provincia on prov_nombre = SUCURSAL_PROVINCIA
+WHERE CLIENTE_PROVINCIA IS NOT NULL
+
+UNION
+
+SELECT DISTINCT CLIENTE_LOCALIDAD AS localidad_nombre, prov_cod 
+FROM gd_esquema.Maestra
+join LOREM_IPSUM.Provincia on prov_nombre = CLIENTE_PROVINCIA
+WHERE CLIENTE_PROVINCIA IS NOT NULL
+ 
+UNION
+
+SELECT DISTINCT SUPER_LOCALIDAD AS localidad_nombre, prov_cod 
+FROM gd_esquema.Maestra
+join LOREM_IPSUM.Provincia on prov_nombre = SUPER_PROVINCIA
+WHERE CLIENTE_PROVINCIA IS NOT NULL
