@@ -99,14 +99,14 @@ GO
 
 -------------------- Creación de tablas ---------------------------
 
-CREATE TABLE LOREM_IPSUM.Provincia(
-    prov_cod        DECIMAL(2,0) NOT NULL,
-    prov_nombre     NVARCHAR(55)
-)
+CREATE TABLE LOREM_IPSUM.Provincia (
+    prov_cod        INT IDENTITY(1,1) NOT NULL,
+    prov_nombre     NVARCHAR(55),
+);
 
 CREATE TABLE LOREM_IPSUM.Localidad(
     localidad_cod       DECIMAL(10,0)   NOT NULL,
-    localidad_prov      DECIMAL(2,0)    NOT NULL,
+    localidad_prov      INT    NOT NULL,
     localidad_nombre    NVARCHAR(55)
 )
 
@@ -538,4 +538,23 @@ FOREIGN KEY (desc_MP_apli_pago) REFERENCES LOREM_IPSUM.Pago(pago_nro);
 ALTER TABLE LOREM_IPSUM.Descuento_MP_Aplicado
 ADD CONSTRAINT FK_Desc_MP_Aplicado_Descuento
 FOREIGN KEY (desc_MP_apli_descuento) REFERENCES LOREM_IPSUM.Descuento_Medio_pago(desc_cod);
+
+-------------------- Migración de tablas ---------------------------
+
+INSERT INTO LOREM_IPSUM.Provincia (prov_nombre)
+SELECT DISTINCT SUCURSAL_PROVINCIA AS prov_nombre
+FROM gd_esquema.Maestra
+WHERE SUCURSAL_PROVINCIA IS NOT NULL
+
+UNION
+
+SELECT DISTINCT CLIENTE_PROVINCIA
+FROM gd_esquema.Maestra
+WHERE CLIENTE_PROVINCIA IS NOT NULL
+
+UNION
+
+SELECT DISTINCT SUPER_PROVINCIA
+FROM gd_esquema.Maestra
+WHERE SUPER_PROVINCIA IS NOT NULL;
 
