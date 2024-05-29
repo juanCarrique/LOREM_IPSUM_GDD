@@ -87,6 +87,8 @@ IF OBJECT_ID('LOREM_IPSUM.Marca_producto','U') IS NOT NULL
 IF OBJECT_ID('LOREM_IPSUM.Promocion','U') IS NOT NULL
     DROP TABLE LOREM_IPSUM.Promocion;
 
+GO
+
 -------------------- Eliminación del esquema ---------------------------
 
 DROP SCHEMA IF EXISTS LOREM_IPSUM
@@ -636,14 +638,14 @@ GROUP BY ENVIO_ESTADO
 -- Migración de Programacion_Envio
 
 INSERT INTO LOREM_IPSUM.Programacion_Envio (prog_env_fecha_programacion, prog_env_hs_inicio, prog_env_hr_fin)
-SELECT CAST(ENVIO_FECHA_ENTREGA AS DATE),
+SELECT CAST(ENVIO_FECHA_PROGRAMADA AS DATE),
        ENVIO_HORA_INICIO,
        ENVIO_HORA_FIN
 FROM gd_esquema.Maestra
 WHERE ENVIO_FECHA_ENTREGA IS NOT NULL
   AND ENVIO_HORA_INICIO IS NOT NULL
   AND ENVIO_HORA_FIN IS NOT NULL
-GROUP BY ENVIO_FECHA_ENTREGA, ENVIO_HORA_INICIO, ENVIO_HORA_FIN
+GROUP BY ENVIO_FECHA_PROGRAMADA, ENVIO_HORA_INICIO, ENVIO_HORA_FIN
 
 -- Migración de Tipo_Medio_Pago
 
@@ -748,38 +750,59 @@ ORDER BY PAGO_TARJETA_NRO
 
 -- Migración de Pago (necesita migrada -> Medio_pago, Ticket(externa), Tarjeta)
 
-/*INSERT INTO LOREM_IPSUM.Pago (pago_importe, pago_cuotas, pago_fecha, pago_ticket, pago_tarjeta, pago_mp)
+INSERT INTO LOREM_IPSUM.Pago (pago_importe, pago_cuotas, pago_fecha, pago_tarjeta, pago_ticket, pago_ticket_sucursal, pago_ticket_tipo, pago_ticket_fecha,pago_mp)
 
 SELECT PAGO_IMPORTE,
        PAGO_TARJETA_CUOTAS,
        PAGO_FECHA,
-       (SELECT ticket_nro FROM LOREM_IPSUM.Ticket WHERE ticket_nro = TICKET_NUMERO),
-       (SELECT tarjeta_nro FROM LOREM_IPSUM.Tarjeta WHERE tarjeta_nro = PAGO_TARJETA_NRO),
+       PAGO_TARJETA_NRO,
+       ticket_nro,
+       ticket_sucursal,
+       ticket_tipo,
+       ticket_fecha,
        (SELECT MP_cod FROM LOREM_IPSUM.Medio_pago WHERE MP_detalle = PAGO_MEDIO_PAGO)
 FROM gd_esquema.Maestra
+         JOIN LOREM_IPSUM.Sucursal ON SUCURSAL_NOMBRE = suc_nombre
+         JOIN LOREM_IPSUM.Ticket
+              ON ticket_nro = TICKET_NUMERO AND ticket_sucursal = suc_cod AND ticket_tipo = TICKET_TIPO_COMPROBANTE AND
+                 ticket_fecha = TICKET_FECHA_HORA
 WHERE PAGO_IMPORTE IS NOT NULL
-GROUP BY PAGO_IMPORTE, PAGO_TARJETA_CUOTAS, PAGO_FECHA, TICKET_NUMERO, PAGO_TARJETA_NRO, PAGO_MEDIO_PAGO*/
+GROUP BY PAGO_IMPORTE, PAGO_TARJETA_CUOTAS, PAGO_FECHA, PAGO_TARJETA_NRO, ticket_nro, ticket_sucursal, ticket_tipo, ticket_fecha,
+         PAGO_MEDIO_PAGO
 
 -- Migración de Descuento_MP_Aplicado (necesita migrada -> Pago, Descuento_Medio_pago)
 
-/*INSERT INTO LOREM_IPSUM.Descuento_MP_Aplicado (desc_MP_apli_monto, desc_MP_apli_pago, desc_MP_apli_descuento)
+INSERT INTO LOREM_IPSUM.Descuento_MP_Aplicado (desc_MP_apli_monto, desc_MP_apli_pago, desc_MP_apli_descuento)
 
 SELECT PAGO_DESCUENTO_APLICADO,
-       (SELECT pago_nro FROM LOREM_IPSUM.Pago WHERE pago_tarjeta = PAGO_TARJETA_NRO),
+       pago_nro,
        (SELECT desc_cod FROM LOREM_IPSUM.Descuento_Medio_pago WHERE desc_cod = DESCUENTO_CODIGO)
 FROM gd_esquema.Maestra
+JOIN LOREM_IPSUM.Pago ON pago_ticket = TICKET_NUMERO
 WHERE PAGO_DESCUENTO_APLICADO IS NOT NULL
-GROUP BY PAGO_DESCUENTO_APLICADO*/
+GROUP BY PAGO_DESCUENTO_APLICADO, pago_nro, DESCUENTO_CODIGO
 
 -- Migración de Envio (necesita migrada -> Cliente, Programacion_Envio, Estado_Envio)
 
-/*INSERT INTO LOREM_IPSUM.Envio (envio_ticket, envio_costo, envio_clie, envio_programacion, envio_estado);
+INSERT INTO LOREM_IPSUM.Envio (envio_costo, envio_ticket, envio_ticket_sucursal, envio_ticket_tipo, envio_ticket_fecha, envio_clie, envio_programacion, envio_estado)
 
-SELECT TICKET_NUMERO,
-       ENVIO_COSTO,
-       (SELECT clie_nro FROM LOREM_IPSUM.Cliente WHERE clie_dni = CLIENTE_DNI),
-       (SELECT prog_env_codigo FROM LOREM_IPSUM.Programacion_Envio WHERE prog_env_fecha_programacion = ENVIO_FECHA_ENTREGA AND prog_env_hs_inicio = ENVIO_HORA_INICIO AND prog_env_hr_fin = ENVIO_HORA_FIN),
-       (SELECT estado_env_cod FROM LOREM_IPSUM.Estado_Envio WHERE estado_env_detalle = ENVIO_ESTADO)
+SELECT ENVIO_COSTO,
+       ticket_nro,
+       ticket_sucursal,
+       ticket_tipo,
+       ticket_fecha,
+       clie_nro,
+       prog_env_codigo,
+       estado_env_cod
 FROM gd_esquema.Maestra
+         JOIN LOREM_IPSUM.Sucursal ON SUCURSAL_NOMBRE = suc_nombre
+         JOIN LOREM_IPSUM.Ticket
+              ON ticket_nro = TICKET_NUMERO AND ticket_sucursal = suc_cod AND ticket_tipo = TICKET_TIPO_COMPROBANTE AND
+                 ticket_fecha = TICKET_FECHA_HORA
+         JOIN LOREM_IPSUM.Programacion_Envio ON (prog_env_fecha_programacion = CAST(ENVIO_FECHA_PROGRAMADA AS DATE)
+                                            AND prog_env_hs_inicio = ENVIO_HORA_INICIO
+                                            AND prog_env_hr_fin = ENVIO_HORA_FIN)
+         JOIN LOREM_IPSUM.Cliente ON clie_dni = CLIENTE_DNI
+         JOIN LOREM_IPSUM.Estado_Envio ON estado_env_detalle = ENVIO_ESTADO
 WHERE ENVIO_COSTO IS NOT NULL
-GROUP BY TICKET_NUMERO, ENVIO_COSTO, ENVIO_FECHA_ENTREGA*/
+GROUP BY ENVIO_COSTO, ticket_nro, ticket_sucursal, ticket_tipo, ticket_fecha, clie_nro, prog_env_codigo, estado_env_cod
