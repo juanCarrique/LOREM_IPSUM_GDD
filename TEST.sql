@@ -156,7 +156,7 @@ CREATE TABLE LOREM_IPSUM.Ticket(
     ticket_nro              DECIMAL(10,0) NOT NULL,
     ticket_tipo             CHAR		  NOT NULL,
     ticket_empleado         DECIMAL(10,0) NOT NULL,
-    ticket_cliente          DECIMAL(10,0) NOT NULL,
+    ticket_cliente          DECIMAL(10,0),
     ticket_caja             DECIMAL(10,0) NOT NULL,
 	ticket_sucursal			INT			  NOT NULL,
     ticket_fecha            DATE,
@@ -240,8 +240,8 @@ CREATE TABLE LOREM_IPSUM.Promocion_x_ProductoTicket(
 CREATE TABLE LOREM_IPSUM.Programacion_Envio(
     prog_env_codigo                  DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     prog_env_fecha_programacion      DATE,
-    prog_env_hs_inicio               TIME,
-    prog_env_hr_fin                  TIME
+    prog_env_hs_inicio               DECIMAL(2,0),
+    prog_env_hr_fin                  DECIMAL(2,0)
 )
 
 
@@ -259,7 +259,7 @@ CREATE TABLE LOREM_IPSUM.Cliente(
     clie_fecha_nacimiento   DATE,
     clie_fecha_registro     DATE,
     clie_mail               NVARCHAR(50),
-    clie_domicilio          NVARCHAR(50),
+    clie_domicilio          NVARCHAR(100),
 )
 
 CREATE TABLE LOREM_IPSUM.Envio(
@@ -275,7 +275,7 @@ CREATE TABLE LOREM_IPSUM.Envio(
 
 CREATE TABLE LOREM_IPSUM.Tarjeta(
     tarjeta_nro         NVARCHAR(10)    NOT NULL,
-    tarjeta_clie        DECIMAL(10,0)   NOT NULL,
+    tarjeta_clie        DECIMAL(10,0),
     tarjeta_vto         DATE,
     tarjeta_detalle     DECIMAL(10,0)
 )
@@ -625,7 +625,7 @@ where EMPLEADO_DNI is not null
 -- Migración de Estado_Envio
 
 INSERT INTO LOREM_IPSUM.Estado_Envio (estado_env_detalle)
-SELECT CAST(ENVIO_ESTADO AS NVARCHAR(50))
+SELECT ENVIO_ESTADO
 FROM gd_esquema.Maestra
 WHERE ENVIO_ESTADO IS NOT NULL
 GROUP BY ENVIO_ESTADO
@@ -634,17 +634,13 @@ GROUP BY ENVIO_ESTADO
 
 INSERT INTO LOREM_IPSUM.Programacion_Envio (prog_env_fecha_programacion, prog_env_hs_inicio, prog_env_hr_fin)
 SELECT CAST(ENVIO_FECHA_ENTREGA AS DATE),
-       CONVERT(TIME,
-               RIGHT('0' + CAST(FLOOR(ENVIO_HORA_INICIO / 100) AS VARCHAR(2)), 2) + ':' +
-               RIGHT('0' + CAST(ENVIO_HORA_INICIO % 100 AS VARCHAR(2)), 2) + ':00'),
-       CONVERT(TIME,
-               RIGHT('0' + CAST(FLOOR(ENVIO_HORA_FIN / 100) AS VARCHAR(2)), 2) + ':' +
-               RIGHT('0' + CAST(ENVIO_HORA_FIN % 100 AS VARCHAR(2)), 2) + ':00')
+       ENVIO_HORA_INICIO,
+       ENVIO_HORA_FIN
 FROM gd_esquema.Maestra
 WHERE ENVIO_FECHA_ENTREGA IS NOT NULL
   AND ENVIO_HORA_INICIO IS NOT NULL
   AND ENVIO_HORA_FIN IS NOT NULL
-GROUP BY ENVIO_FECHA_ENTREGA, ENVIO_HORA_INICIO, ENVIO_HORA_FIN;
+GROUP BY ENVIO_FECHA_ENTREGA, ENVIO_HORA_INICIO, ENVIO_HORA_FIN
 
 -- Migración de Tipo_Medio_Pago
 
@@ -704,24 +700,68 @@ GROUP BY CLIENTE_NOMBRE, CLIENTE_APELLIDO, CLIENTE_DNI, CLIENTE_FECHA_NACIMIENTO
 
 -- Migración de Ticket
 
-INSERT INTO LOREM_IPSUM.Ticket(ticket_cliente, ticket_caja,ticket_desc_promociones, ticket_desc_medio_pago, ticket_empleado, ticket_fecha, ticket_nro, ticket_subtotal, ticket_sucursal, ticket_tipo, ticket_total)
-select distinct clie_nro, LOREM_IPSUM.Caja.caja_numero, TICKET_TOTAL_DESCUENTO_APLICADO, TICKET_TOTAL_DESCUENTO_APLICADO_MP, emp_dni, TICKET_FECHA_HORA, TICKET_NUMERO, TICKET_SUBTOTAL_PRODUCTOS, caja_sucursal, TICKET_TIPO_COMPROBANTE, TICKET_DET_TOTAL from gd_esquema.Maestra
-join LOREM_IPSUM.Cliente	on CLIENTE_DNI = clie_dni
-join LOREM_IPSUM.Caja		on gd_esquema.Maestra.CAJA_NUMERO = LOREM_IPSUM.Caja.caja_numero 
-join LOREM_IPSUM.Empleado   on EMPLEADO_DNI = emp_dni		
-where TICKET_NUMERO is not null
+INSERT INTO LOREM_IPSUM.Ticket(ticket_nro, ticket_desc_promociones, ticket_desc_medio_pago, ticket_fecha,
+                               ticket_subtotal, ticket_tipo, ticket_total, ticket_empleado, ticket_sucursal,
+                               ticket_caja, ticket_cliente)
+
+SELECT TICKET_NUMERO,
+       TICKET_TOTAL_DESCUENTO_APLICADO,
+       TICKET_TOTAL_DESCUENTO_APLICADO_MP,
+       TICKET_FECHA_HORA,
+       TICKET_SUBTOTAL_PRODUCTOS,
+       TICKET_TIPO_COMPROBANTE,
+       TICKET_TOTAL_TICKET,
+       emp_dni,
+       caja_sucursal,
+       M1.caja_numero,
+       (SELECT MAX(clie_nro)
+        FROM LOREM_IPSUM.Cliente
+                 JOIN gd_esquema.Maestra M2 ON CLIENTE_DNI = clie_dni
+        WHERE M2.TICKET_NUMERO = M1.TICKET_NUMERO)
+FROM gd_esquema.Maestra M1
+         JOIN LOREM_IPSUM.Empleado ON EMPLEADO_DNI = emp_dni
+         JOIN LOREM_IPSUM.Sucursal ON SUCURSAL_NOMBRE = suc_nombre
+         join LOREM_IPSUM.Caja
+              on M1.CAJA_NUMERO = LOREM_IPSUM.Caja.caja_numero and caja_sucursal = suc_cod
+GROUP BY TICKET_TOTAL_DESCUENTO_APLICADO, TICKET_TOTAL_DESCUENTO_APLICADO_MP, TICKET_FECHA_HORA, TICKET_NUMERO,
+         TICKET_SUBTOTAL_PRODUCTOS, TICKET_TIPO_COMPROBANTE, TICKET_TOTAL_TICKET, emp_dni, caja_sucursal,
+         M1.caja_numero
+
+/*INSERT INTO LOREM_IPSUM.Ticket(ticket_cliente, ticket_caja, ticket_desc_promociones, ticket_desc_medio_pago,
+                               ticket_empleado, ticket_fecha, ticket_nro, ticket_subtotal, ticket_sucursal, ticket_tipo,
+                               ticket_total)
+select distinct clie_nro,
+                LOREM_IPSUM.Caja.caja_numero,
+                TICKET_TOTAL_DESCUENTO_APLICADO,
+                TICKET_TOTAL_DESCUENTO_APLICADO_MP,
+                emp_dni,
+                TICKET_FECHA_HORA,
+                TICKET_NUMERO,
+                TICKET_SUBTOTAL_PRODUCTOS,
+                caja_sucursal,
+                TICKET_TIPO_COMPROBANTE,
+                TICKET_DET_TOTAL
+from gd_esquema.Maestra
+         join LOREM_IPSUM.Cliente on CLIENTE_DNI = clie_dni
+         join LOREM_IPSUM.Caja on gd_esquema.Maestra.CAJA_NUMERO = LOREM_IPSUM.Caja.caja_numero
+         join LOREM_IPSUM.Empleado on EMPLEADO_DNI = emp_dni
+where TICKET_NUMERO is not null*/
 
 -- Migración de Tarjeta (necesita migrada -> Tipo_Medio_Pago, Medio_pago y Cliente)
 
-/*INSERT INTO LOREM_IPSUM.Tarjeta (tarjeta_nro, tarjeta_vto, tarjeta_clie, tarjeta_detalle)
+INSERT INTO LOREM_IPSUM.Tarjeta (tarjeta_nro, tarjeta_vto, tarjeta_clie, tarjeta_detalle)
 
 SELECT PAGO_TARJETA_NRO,
        PAGO_TARJETA_FECHA_VENC,
-       (SELECT clie_nro FROM LOREM_IPSUM.Cliente WHERE clie_dni = CLIENTE_DNI),
+       (SELECT MAX(clie_nro)
+        FROM LOREM_IPSUM.Cliente
+                 JOIN gd_esquema.Maestra ON clie_dni = CLIENTE_DNI
+        WHERE TICKET_NUMERO = M1.TICKET_NUMERO),
        (SELECT MP_cod FROM LOREM_IPSUM.Medio_pago WHERE MP_detalle = PAGO_MEDIO_PAGO)
-FROM gd_esquema.Maestra
+FROM gd_esquema.Maestra M1
 WHERE PAGO_TARJETA_NRO IS NOT NULL
-GROUP BY PAGO_TARJETA_NRO, PAGO_TARJETA_FECHA_VENC, CLIENTE_DNI, PAGO_MEDIO_PAGO*/
+GROUP BY PAGO_TARJETA_NRO, PAGO_TARJETA_FECHA_VENC, CLIENTE_DNI, PAGO_MEDIO_PAGO, TICKET_NUMERO
+ORDER BY PAGO_TARJETA_NRO
 
 -- Migración de Pago (necesita migrada -> Medio_pago, Ticket(externa), Tarjeta)
 
