@@ -159,7 +159,7 @@ CREATE TABLE LOREM_IPSUM.Ticket(
     ticket_cliente          DECIMAL(10,0),
     ticket_caja             DECIMAL(10,0) NOT NULL,
 	ticket_sucursal			INT			  NOT NULL,
-    ticket_fecha            DATE,
+    ticket_fecha            DATETIME NOT NULL,
     ticket_subtotal         DECIMAL(10,2),
     ticket_desc_promociones DECIMAL(10,2),
 	ticket_desc_medio_pago  DECIMAL(10,2),
@@ -222,6 +222,7 @@ CREATE TABLE LOREM_IPSUM.Producto(
 
 CREATE TABLE LOREM_IPSUM.Prod_Ticket(
     PT_ticket      DECIMAL(10,0) NOT NULL,
+    PT_ticket_fecha            DATETIME NOT NULL,
     PT_prod        DECIMAL(10,0) NOT NULL,
     PT_tipo        CHAR,
     PT_cant        DECIMAL(3,0) NOT NULL,
@@ -267,6 +268,7 @@ CREATE TABLE LOREM_IPSUM.Envio(
     envio_ticket                DECIMAL(10,0) NOT NULL,
 	envio_ticket_sucursal		INT NOT NULL, 
 	envio_ticket_tipo			CHAR NOT NULL,
+    envio_ticket_fecha            DATETIME NOT NULL,
     envio_clie                  DECIMAL(10,0) NOT NULL,
     envio_programacion          DECIMAL(10,0) NOT NULL,
     envio_costo                 DECIMAL(10,0),
@@ -297,7 +299,8 @@ CREATE TABLE LOREM_IPSUM.Pago(
     pago_mp                 DECIMAL(10,0) NOT NULL,
     pago_ticket             DECIMAL(10,0) NOT NULL,
 	pago_ticket_tipo		CHAR NOT NULL,
-	pago_ticket_sucursal	INT NOT NULL,	
+	pago_ticket_sucursal	INT NOT NULL,
+    pago_ticket_fecha            DATETIME NOT NULL,
     pago_tarjeta            NVARCHAR(10),
     pago_fecha              DATETIME,
     pago_importe            DECIMAL(18,2),
@@ -336,7 +339,7 @@ ALTER TABLE LOREM_IPSUM.Sucursal
 ADD CONSTRAINT PK_Sucursal PRIMARY KEY (suc_cod);
 
 ALTER TABLE LOREM_IPSUM.Ticket
-ADD CONSTRAINT PK_Ticket PRIMARY KEY (ticket_nro, ticket_sucursal, ticket_tipo);
+ADD CONSTRAINT PK_Ticket PRIMARY KEY (ticket_nro, ticket_sucursal, ticket_tipo, ticket_fecha);
 
 ALTER TABLE LOREM_IPSUM.Tipo_Caja
 ADD CONSTRAINT PK_Tipo_Caja PRIMARY KEY (TC_cod);
@@ -479,7 +482,7 @@ FOREIGN KEY (prod_marca) REFERENCES LOREM_IPSUM.Marca_producto(marca_cod);
 -- Foreign keys para LOREM_IPSUM.Prod_Ticket
 ALTER TABLE LOREM_IPSUM.Prod_Ticket
 ADD CONSTRAINT FK_Prod_Ticket_Ticket
-FOREIGN KEY (PT_ticket, PT_sucursal, PT_tipo) REFERENCES LOREM_IPSUM.Ticket(ticket_nro, ticket_sucursal, ticket_tipo);
+FOREIGN KEY (PT_ticket, PT_sucursal, PT_tipo, PT_ticket_fecha) REFERENCES LOREM_IPSUM.Ticket(ticket_nro, ticket_sucursal, ticket_tipo, ticket_fecha);
 
 ALTER TABLE LOREM_IPSUM.Prod_Ticket
 ADD CONSTRAINT FK_Prod_Ticket_Producto
@@ -497,7 +500,7 @@ FOREIGN KEY (PPT_promo) REFERENCES LOREM_IPSUM.Promocion(promo_cod);
 -- Foreign keys para LOREM_IPSUM.Envio
 ALTER TABLE LOREM_IPSUM.Envio
 ADD CONSTRAINT FK_Envio_Ticket
-FOREIGN KEY (envio_ticket, envio_ticket_sucursal, envio_ticket_tipo) REFERENCES LOREM_IPSUM.Ticket(ticket_nro, ticket_sucursal, ticket_tipo);
+FOREIGN KEY (envio_ticket, envio_ticket_sucursal, envio_ticket_tipo, envio_ticket_fecha) REFERENCES LOREM_IPSUM.Ticket(ticket_nro, ticket_sucursal, ticket_tipo, ticket_fecha);
 
 ALTER TABLE LOREM_IPSUM.Envio
 ADD CONSTRAINT FK_Envio_Cliente
@@ -524,7 +527,7 @@ FOREIGN KEY (pago_mp) REFERENCES LOREM_IPSUM.Medio_pago(MP_cod);
 
 ALTER TABLE LOREM_IPSUM.Pago
 ADD CONSTRAINT FK_Pago_Ticket
-FOREIGN KEY (pago_ticket, pago_ticket_sucursal, pago_ticket_tipo) REFERENCES LOREM_IPSUM.Ticket(ticket_nro, ticket_sucursal, ticket_tipo);
+FOREIGN KEY (pago_ticket, pago_ticket_sucursal, pago_ticket_tipo, pago_ticket_fecha) REFERENCES LOREM_IPSUM.Ticket(ticket_nro, ticket_sucursal, ticket_tipo, ticket_fecha);
 
 ALTER TABLE LOREM_IPSUM.Pago
 ADD CONSTRAINT FK_Pago_Tarjeta
@@ -726,26 +729,6 @@ FROM gd_esquema.Maestra M1
 GROUP BY TICKET_TOTAL_DESCUENTO_APLICADO, TICKET_TOTAL_DESCUENTO_APLICADO_MP, TICKET_FECHA_HORA, TICKET_NUMERO,
          TICKET_SUBTOTAL_PRODUCTOS, TICKET_TIPO_COMPROBANTE, TICKET_TOTAL_TICKET, emp_dni, caja_sucursal,
          M1.caja_numero
-
-/*INSERT INTO LOREM_IPSUM.Ticket(ticket_cliente, ticket_caja, ticket_desc_promociones, ticket_desc_medio_pago,
-                               ticket_empleado, ticket_fecha, ticket_nro, ticket_subtotal, ticket_sucursal, ticket_tipo,
-                               ticket_total)
-select distinct clie_nro,
-                LOREM_IPSUM.Caja.caja_numero,
-                TICKET_TOTAL_DESCUENTO_APLICADO,
-                TICKET_TOTAL_DESCUENTO_APLICADO_MP,
-                emp_dni,
-                TICKET_FECHA_HORA,
-                TICKET_NUMERO,
-                TICKET_SUBTOTAL_PRODUCTOS,
-                caja_sucursal,
-                TICKET_TIPO_COMPROBANTE,
-                TICKET_DET_TOTAL
-from gd_esquema.Maestra
-         join LOREM_IPSUM.Cliente on CLIENTE_DNI = clie_dni
-         join LOREM_IPSUM.Caja on gd_esquema.Maestra.CAJA_NUMERO = LOREM_IPSUM.Caja.caja_numero
-         join LOREM_IPSUM.Empleado on EMPLEADO_DNI = emp_dni
-where TICKET_NUMERO is not null*/
 
 -- Migración de Tarjeta (necesita migrada -> Tipo_Medio_Pago, Medio_pago y Cliente)
 
