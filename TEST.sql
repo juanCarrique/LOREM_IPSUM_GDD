@@ -111,38 +111,39 @@ CREATE TABLE LOREM_IPSUM.Localidad(
 )
 
 CREATE TABLE LOREM_IPSUM.Supermercado(
-    super_cuit              DECIMAL(13,0) NOT NULL,
+	super_cod				INT IDENTITY(1,1) NOT NULL,
+    super_cuit              NVARCHAR(13) NOT NULL,
     super_localidad         INT NOT NULL,
     super_nombre            NVARCHAR(255),
     super_iibb              NVARCHAR(255),
     super_domicilio         NVARCHAR(255),
     super_ini_actividades   DATE,
-    super_condicion_fiscal  NVARCHAR(255)
+    super_condicion_fiscal  NVARCHAR(255),
+	super_razon_social		NVARCHAR(255)
 )
 
 CREATE TABLE LOREM_IPSUM.Sucursal(
-    suc_cod         DECIMAL(10,0) NOT NULL,
+    suc_cod         INT IDENTITY(1,1) NOT NULL,
     suc_localidad   INT NOT NULL,
-    suc_super       DECIMAL(13,0) NOT NULL,
+    suc_super       INT NOT NULL,
     suc_nombre      NVARCHAR(255),
     suc_direccion   NVARCHAR(255)
 
 )
 
 CREATE TABLE LOREM_IPSUM.Tipo_Caja(
-    TC_cod         DECIMAL(10,0) NOT NULL,
+    TC_cod         INT IDENTITY(1,1) NOT NULL,
     TC_detalle     NVARCHAR(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Caja(
     caja_numero     DECIMAL(10,0) NOT NULL,
-    caja_tipo       DECIMAL(10,0) NOT NULL,
-    caja_sucursal   DECIMAL(10,0) NOT NULL
+    caja_tipo       INT NOT NULL,
+    caja_sucursal   INT NOT NULL
 )
 
 CREATE TABLE LOREM_IPSUM.Empleado(
-    empl_legajo             DECIMAL(10,0) NOT NULL,
-    emp_sucursal            DECIMAL(10,0) NOT NULL,
+    emp_sucursal            INT NOT NULL,
     emp_nombre              NVARCHAR(255),
     emp_apellido            NVARCHAR(255),
     emp_dni                 DECIMAL(10,0) NOT NULL,
@@ -153,14 +154,16 @@ CREATE TABLE LOREM_IPSUM.Empleado(
 
 CREATE TABLE LOREM_IPSUM.Ticket(
     ticket_nro              DECIMAL(10,0) NOT NULL,
-    ticket_tipo             CHAR,
+    ticket_tipo             CHAR		  NOT NULL,
     ticket_empleado         DECIMAL(10,0) NOT NULL,
     ticket_cliente          DECIMAL(10,0) NOT NULL,
     ticket_caja             DECIMAL(10,0) NOT NULL,
+	ticket_sucursal			INT			  NOT NULL,
     ticket_fecha            DATE,
-    ticket_subtotal         DECIMAL(10,0),
-    ticket_desc_promociones DECIMAL(10,0),
-    ticket_total            DECIMAL(10,0)
+    ticket_subtotal         DECIMAL(10,2),
+    ticket_desc_promociones DECIMAL(10,2),
+	ticket_desc_medio_pago  DECIMAL(10,2),
+    ticket_total            DECIMAL(10,2)
 )
 
 CREATE TABLE LOREM_IPSUM.Marca_producto(
@@ -223,7 +226,8 @@ CREATE TABLE LOREM_IPSUM.Prod_Ticket(
     PT_tipo        CHAR,
     PT_cant        DECIMAL(3,0) NOT NULL,
     PT_precio      DECIMAL(18,2),
-    PPT_descuento  DECIMAL(18,2)
+    PT_descuento   DECIMAL(18,2),
+	PT_sucursal   INT			NOT NULL
 )
 
 CREATE TABLE LOREM_IPSUM.Promocion_x_ProductoTicket(
@@ -261,6 +265,8 @@ CREATE TABLE LOREM_IPSUM.Cliente(
 CREATE TABLE LOREM_IPSUM.Envio(
     envio_nro                   DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     envio_ticket                DECIMAL(10,0) NOT NULL,
+	envio_ticket_sucursal		INT NOT NULL, 
+	envio_ticket_tipo			CHAR NOT NULL,
     envio_clie                  DECIMAL(10,0) NOT NULL,
     envio_programacion          DECIMAL(10,0) NOT NULL,
     envio_costo                 DECIMAL(10,0),
@@ -290,6 +296,8 @@ CREATE TABLE LOREM_IPSUM.Pago(
     pago_nro                DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
     pago_mp                 DECIMAL(10,0) NOT NULL,
     pago_ticket             DECIMAL(10,0) NOT NULL,
+	pago_ticket_tipo		CHAR NOT NULL,
+	pago_ticket_sucursal	INT NOT NULL,	
     pago_tarjeta            NVARCHAR(10),
     pago_fecha              DATETIME,
     pago_importe            DECIMAL(18,2),
@@ -322,22 +330,22 @@ ALTER TABLE LOREM_IPSUM.Localidad
 ADD CONSTRAINT PK_Localidad PRIMARY KEY (localidad_cod);
 
 ALTER TABLE LOREM_IPSUM.Supermercado
-ADD CONSTRAINT PK_Super PRIMARY KEY (super_cuit);
+ADD CONSTRAINT PK_Super PRIMARY KEY (super_cod);
 
 ALTER TABLE LOREM_IPSUM.Sucursal
 ADD CONSTRAINT PK_Sucursal PRIMARY KEY (suc_cod);
 
 ALTER TABLE LOREM_IPSUM.Ticket
-ADD CONSTRAINT PK_Ticket PRIMARY KEY (ticket_nro);
+ADD CONSTRAINT PK_Ticket PRIMARY KEY (ticket_nro, ticket_sucursal, ticket_tipo);
 
 ALTER TABLE LOREM_IPSUM.Tipo_Caja
 ADD CONSTRAINT PK_Tipo_Caja PRIMARY KEY (TC_cod);
 
 ALTER TABLE LOREM_IPSUM.Caja
-ADD CONSTRAINT PK_Caja PRIMARY KEY (caja_numero);
+ADD CONSTRAINT PK_Caja PRIMARY KEY (caja_numero, caja_sucursal);
 
 ALTER TABLE LOREM_IPSUM.Empleado
-ADD CONSTRAINT PK_Empleado PRIMARY KEY (empl_legajo);
+ADD CONSTRAINT PK_Empleado PRIMARY KEY (emp_dni);
 
 ALTER TABLE LOREM_IPSUM.Marca_producto
 ADD CONSTRAINT PK_Marca_producto PRIMARY KEY (marca_cod);
@@ -404,7 +412,7 @@ FOREIGN KEY (suc_localidad) REFERENCES LOREM_IPSUM.Localidad(localidad_cod);
 
 ALTER TABLE LOREM_IPSUM.Sucursal
 ADD CONSTRAINT FK_Sucursal_Super
-FOREIGN KEY (suc_super) REFERENCES LOREM_IPSUM.Supermercado(super_cuit);
+FOREIGN KEY (suc_super) REFERENCES LOREM_IPSUM.Supermercado(super_cod);
 
 -- Foreign keys para LOREM_IPSUM.Caja
 ALTER TABLE LOREM_IPSUM.Caja
@@ -424,7 +432,7 @@ FOREIGN KEY (emp_sucursal) REFERENCES LOREM_IPSUM.Sucursal(suc_cod);
 
 ALTER TABLE LOREM_IPSUM.Ticket
 ADD CONSTRAINT FK_Ticket_Empleado
-FOREIGN KEY (ticket_empleado) REFERENCES LOREM_IPSUM.Empleado(empl_legajo);
+FOREIGN KEY (ticket_empleado) REFERENCES LOREM_IPSUM.Empleado(emp_dni);
 
 ALTER TABLE LOREM_IPSUM.Ticket
 ADD CONSTRAINT FK_Ticket_Cliente
@@ -432,7 +440,8 @@ FOREIGN KEY (ticket_cliente) REFERENCES LOREM_IPSUM.Cliente(clie_nro);
 
 ALTER TABLE LOREM_IPSUM.Ticket
 ADD CONSTRAINT FK_Ticket_Caja
-FOREIGN KEY (ticket_caja) REFERENCES LOREM_IPSUM.Caja(caja_numero);
+FOREIGN KEY (ticket_caja, ticket_sucursal) REFERENCES LOREM_IPSUM.Caja(caja_numero, caja_sucursal);
+
 
 -- Foreign keys para LOREM_IPSUM.Subcategoria
 ALTER TABLE LOREM_IPSUM.Subcategoria
@@ -470,7 +479,7 @@ FOREIGN KEY (prod_marca) REFERENCES LOREM_IPSUM.Marca_producto(marca_cod);
 -- Foreign keys para LOREM_IPSUM.Prod_Ticket
 ALTER TABLE LOREM_IPSUM.Prod_Ticket
 ADD CONSTRAINT FK_Prod_Ticket_Ticket
-FOREIGN KEY (PT_ticket) REFERENCES LOREM_IPSUM.Ticket(ticket_nro);
+FOREIGN KEY (PT_ticket, PT_sucursal, PT_tipo) REFERENCES LOREM_IPSUM.Ticket(ticket_nro, ticket_sucursal, ticket_tipo);
 
 ALTER TABLE LOREM_IPSUM.Prod_Ticket
 ADD CONSTRAINT FK_Prod_Ticket_Producto
@@ -488,7 +497,7 @@ FOREIGN KEY (PPT_promo) REFERENCES LOREM_IPSUM.Promocion(promo_cod);
 -- Foreign keys para LOREM_IPSUM.Envio
 ALTER TABLE LOREM_IPSUM.Envio
 ADD CONSTRAINT FK_Envio_Ticket
-FOREIGN KEY (envio_ticket) REFERENCES LOREM_IPSUM.Ticket(ticket_nro);
+FOREIGN KEY (envio_ticket, envio_ticket_sucursal, envio_ticket_tipo) REFERENCES LOREM_IPSUM.Ticket(ticket_nro, ticket_sucursal, ticket_tipo);
 
 ALTER TABLE LOREM_IPSUM.Envio
 ADD CONSTRAINT FK_Envio_Cliente
@@ -515,7 +524,7 @@ FOREIGN KEY (pago_mp) REFERENCES LOREM_IPSUM.Medio_pago(MP_cod);
 
 ALTER TABLE LOREM_IPSUM.Pago
 ADD CONSTRAINT FK_Pago_Ticket
-FOREIGN KEY (pago_ticket) REFERENCES LOREM_IPSUM.Ticket(ticket_nro);
+FOREIGN KEY (pago_ticket, pago_ticket_sucursal, pago_ticket_tipo) REFERENCES LOREM_IPSUM.Ticket(ticket_nro, ticket_sucursal, ticket_tipo);
 
 ALTER TABLE LOREM_IPSUM.Pago
 ADD CONSTRAINT FK_Pago_Tarjeta
@@ -556,6 +565,7 @@ SELECT DISTINCT SUPER_PROVINCIA
 FROM gd_esquema.Maestra
 WHERE SUPER_PROVINCIA IS NOT NULL;
 
+-- Migración de Localidad
 
 INSERT INTO LOREM_IPSUM.Localidad (localidad_nombre, localidad_prov)
 SELECT DISTINCT SUCURSAL_LOCALIDAD AS localidad_nombre, prov_cod 
@@ -576,6 +586,42 @@ SELECT DISTINCT SUPER_LOCALIDAD AS localidad_nombre, prov_cod
 FROM gd_esquema.Maestra
 join LOREM_IPSUM.Provincia on prov_nombre = SUPER_PROVINCIA
 WHERE CLIENTE_PROVINCIA IS NOT NULL
+
+-- Migración de Supermercado
+
+INSERT INTO LOREM_IPSUM.Supermercado (super_cuit, super_nombre, super_iibb, super_domicilio, super_ini_actividades, super_condicion_fiscal,super_razon_social , super_localidad)
+select distinct SUPER_CUIT, SUPER_NOMBRE, SUPER_IIBB, SUPER_DOMICILIO, SUPER_FECHA_INI_ACTIVIDAD, SUPER_CONDICION_FISCAL,SUPER_RAZON_SOC ,localidad_cod from gd_esquema.Maestra
+join LOREM_IPSUM.Localidad on SUPER_LOCALIDAD = localidad_nombre
+where SUPER_CONDICION_FISCAL IS NOT NULL
+
+-- Migración de Sucursal
+
+INSERT INTO LOREM_IPSUM.Sucursal(suc_direccion, suc_nombre, suc_super, suc_localidad)
+select distinct SUCURSAL_DIRECCION, SUCURSAL_NOMBRE,super_cod , localidad_cod from gd_esquema.Maestra
+join LOREM_IPSUM.Localidad on SUCURSAL_LOCALIDAD = localidad_nombre
+join LOREM_IPSUM.Supermercado on gd_esquema.Maestra.SUPER_NOMBRE = LOREM_IPSUM.Supermercado.super_nombre
+
+-- Migración de Tipo_Caja
+
+INSERT INTO LOREM_IPSUM.Tipo_Caja(TC_detalle)
+select distinct CAJA_TIPO from gd_esquema.Maestra
+where CAJA_TIPO is not null
+
+-- Migración de Caja
+
+INSERT INTO LOREM_IPSUM.Caja(caja_numero, caja_sucursal, caja_tipo)
+select distinct CAJA_NUMERO, suc_cod, TC_cod from gd_esquema.Maestra
+join LOREM_IPSUM.Sucursal on suc_nombre = SUCURSAL_NOMBRE
+join LOREM_IPSUM.Tipo_Caja on TC_detalle = CAJA_TIPO
+where CAJA_NUMERO is not null
+
+-- Migración de Empleado
+
+INSERT INTO LOREM_IPSUM.Empleado(emp_apellido, emp_dni, emp_nombre, emp_fecha_nacimiento, emp_fecha_registro, emp_sucursal, emp_telefono)
+select distinct EMPLEADO_APELLIDO, EMPLEADO_DNI, EMPLEADO_NOMBRE, EMPLEADO_FECHA_NACIMIENTO, EMPLEADO_FECHA_REGISTRO, suc_cod, EMPLEADO_TELEFONO from gd_esquema.Maestra
+join LOREM_IPSUM.Sucursal on suc_nombre = SUCURSAL_NOMBRE
+where EMPLEADO_DNI is not null
+
 -- Migración de Estado_Envio
 
 INSERT INTO LOREM_IPSUM.Estado_Envio (estado_env_detalle)
@@ -637,7 +683,7 @@ GROUP BY DESCUENTO_CODIGO, PAGO_MEDIO_PAGO, DESCUENTO_DESCRIPCION, DESCUENTO_FEC
 
 -- Migración de Cliente (necesita migrada -> localidad y provincia)
 
-/*INSERT INTO LOREM_IPSUM.Cliente (clie_nombre, clie_apellido, clie_dni, clie_fecha_nacimiento, clie_fecha_registro,
+INSERT INTO LOREM_IPSUM.Cliente (clie_nombre, clie_apellido, clie_dni, clie_fecha_nacimiento, clie_fecha_registro,
                                  clie_mail, clie_domicilio, clie_localidad)
 SELECT CLIENTE_NOMBRE,
        CLIENTE_APELLIDO,
@@ -654,7 +700,16 @@ SELECT CLIENTE_NOMBRE,
 FROM gd_esquema.Maestra
 WHERE Maestra.CLIENTE_NOMBRE IS NOT NULL
 GROUP BY CLIENTE_NOMBRE, CLIENTE_APELLIDO, CLIENTE_DNI, CLIENTE_FECHA_NACIMIENTO, CLIENTE_FECHA_REGISTRO, CLIENTE_MAIL,
-         CLIENTE_DOMICILIO, CLIENTE_LOCALIDAD, CLIENTE_PROVINCIA*/
+         CLIENTE_DOMICILIO, CLIENTE_LOCALIDAD, CLIENTE_PROVINCIA
+
+-- Migración de Ticket
+
+INSERT INTO LOREM_IPSUM.Ticket(ticket_cliente, ticket_caja,ticket_desc_promociones, ticket_desc_medio_pago, ticket_empleado, ticket_fecha, ticket_nro, ticket_subtotal, ticket_sucursal, ticket_tipo, ticket_total)
+select distinct clie_nro, LOREM_IPSUM.Caja.caja_numero, TICKET_TOTAL_DESCUENTO_APLICADO, TICKET_TOTAL_DESCUENTO_APLICADO_MP, emp_dni, TICKET_FECHA_HORA, TICKET_NUMERO, TICKET_SUBTOTAL_PRODUCTOS, caja_sucursal, TICKET_TIPO_COMPROBANTE, TICKET_DET_TOTAL from gd_esquema.Maestra
+join LOREM_IPSUM.Cliente	on CLIENTE_DNI = clie_dni
+join LOREM_IPSUM.Caja		on gd_esquema.Maestra.CAJA_NUMERO = LOREM_IPSUM.Caja.caja_numero 
+join LOREM_IPSUM.Empleado   on EMPLEADO_DNI = emp_dni		
+where TICKET_NUMERO is not null
 
 -- Migración de Tarjeta (necesita migrada -> Tipo_Medio_Pago, Medio_pago y Cliente)
 
