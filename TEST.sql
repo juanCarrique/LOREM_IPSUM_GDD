@@ -176,12 +176,12 @@ CREATE TABLE LOREM_IPSUM.Categoria(
 
 CREATE TABLE LOREM_IPSUM.Subcategoria(
     subcat_cod      DECIMAL(10,0) NOT NULL,
-    subcat_cat      DECIMAL(10,0) NOT NULL,
-    subcat_nombre   NVARCHAR(255)
+	--subcat_cat	  INT NOT NULL,
+    subcat_nombre   NVARCHAR(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Regla(
-    regla_cod               DECIMAL(10,0) NOT NULL,
+    regla_cod				INT identity(1,1) NOT NULL,
     regla_descripcion       NVARCHAR(255),
     regla_descuento         DECIMAL(3,2),
     regla_cant_aplicable    DECIMAL(10,0),
@@ -192,8 +192,8 @@ CREATE TABLE LOREM_IPSUM.Regla(
 )
 
 CREATE TABLE LOREM_IPSUM.Promo_Regla(
-    promo_cod       DECIMAL(10,0) NOT NULL,
-    promo_regla     DECIMAL(10,0) NOT NULL
+    promo_cod       DECIMAL(10,0),
+    promo_regla     INT NOT NULL
 )
 
 CREATE TABLE LOREM_IPSUM.Promocion(
@@ -212,6 +212,7 @@ CREATE TABLE LOREM_IPSUM.Prod_Promo(
 
 CREATE TABLE LOREM_IPSUM.Producto(
     prod_cod        DECIMAL(10,0) NOT NULL,
+	prod_cat		DECIMAL(10,0) NOT NULL,
     prod_sub_cat    DECIMAL(10,0) NOT NULL,
     prod_marca      DECIMAL(10,0) NOT NULL,
     prod_nombre     NVARCHAR(255),
@@ -439,10 +440,14 @@ ALTER TABLE LOREM_IPSUM.Ticket
 ADD CONSTRAINT FK_Ticket_Caja
 FOREIGN KEY (ticket_caja) REFERENCES LOREM_IPSUM.Caja(caja_numero);
 
--- Foreign keys para LOREM_IPSUM.Subcategoria
-ALTER TABLE LOREM_IPSUM.Subcategoria
-ADD CONSTRAINT FK_Subcategoria_Categoria
-FOREIGN KEY (subcat_cat) REFERENCES LOREM_IPSUM.Categoria(cat_cod);
+---- Foreign keys para LOREM_IPSUM.Subcategoria
+--ALTER TABLE LOREM_IPSUM.Subcategoria
+--ADD CONSTRAINT FK_Subcategoria_Categoria
+--FOREIGN KEY (subcat_cat) REFERENCES LOREM_IPSUM.Categoria(cat_cod);
+-- muevo la relacion a producto
+
+
+
 
 -- Foreign keys para LOREM_IPSUM.Promo_Regla
 ALTER TABLE LOREM_IPSUM.Promo_Regla
@@ -467,6 +472,10 @@ FOREIGN KEY (PP_promo_cod) REFERENCES LOREM_IPSUM.Promocion(promo_cod);
 ALTER TABLE LOREM_IPSUM.Producto
 ADD CONSTRAINT FK_Producto_Subcategoria
 FOREIGN KEY (prod_sub_cat) REFERENCES LOREM_IPSUM.Subcategoria(subcat_cod);
+
+ALTER TABLE LOREM_IPSUM.Producto
+ADD CONSTRAINT FK_Producto_Categoria
+FOREIGN KEY (prod_cat) REFERENCES LOREM_IPSUM.Categoria(cat_cod);
 
 ALTER TABLE LOREM_IPSUM.Producto
 ADD CONSTRAINT FK_Producto_Marca
@@ -539,4 +548,91 @@ FOREIGN KEY (desc_MP_apli_pago) REFERENCES LOREM_IPSUM.Pago(pago_nro);
 ALTER TABLE LOREM_IPSUM.Descuento_MP_Aplicado
 ADD CONSTRAINT FK_Desc_MP_Aplicado_Descuento
 FOREIGN KEY (desc_MP_apli_descuento) REFERENCES LOREM_IPSUM.Descuento_Medio_pago(desc_cod);
+
+
+--  Migración de tablas 
+
+INSERT INTO LOREM_IPSUM.Regla (
+    regla_descripcion,       
+    regla_descuento,
+    regla_cant_aplicable,
+    regla_cant_ap_desc,
+    regla_cant_maxima,
+    regla_misma_marca,
+    regla_mismo_prod
+)
+SELECT 
+    REGLA_DESCRIPCION,
+    REGLA_DESCUENTO_APLICABLE_PROD,
+    REGLA_CANT_APLICABLE_REGLA,
+    REGLA_CANT_APLICA_DESCUENTO,
+    REGLA_CANT_MAX_PROD,
+    REGLA_APLICA_MISMA_MARCA,
+    REGLA_APLICA_MISMO_PROD
+FROM gd_esquema.Maestra
+where REGLA_DESCRIPCION IS NOT NULL
+group by REGLA_DESCRIPCION,
+    REGLA_DESCUENTO_APLICABLE_PROD,
+    REGLA_CANT_APLICABLE_REGLA,
+    REGLA_CANT_APLICA_DESCUENTO,
+    REGLA_CANT_MAX_PROD,
+    REGLA_APLICA_MISMA_MARCA,
+    REGLA_APLICA_MISMO_PROD;
+
+
+
+insert into LOREM_IPSUM.Promocion(    
+	promo_cod,
+    promo_descripcion,
+    promo_inicio,
+    promo_fin
+	)
+select PROMO_CODIGO, PROMOCION_DESCRIPCION, PROMOCION_FECHA_INICIO, PROMOCION_FECHA_FIN from gd_esquema.Maestra
+where PROMO_CODIGO is not null
+group by PROMO_CODIGO, PROMOCION_DESCRIPCION, PROMOCION_FECHA_INICIO, PROMOCION_FECHA_FIN
+
+
+-- relaciono uno a uno, queda abierta la posibilidad de muchos a muchos
+insert into LOREM_IPSUM.Promo_Regla(
+	promo_cod,
+	promo_regla
+)
+select promo_cod, regla_cod FROM LOREM_IPSUM.Promocion
+JOIN LOREM_IPSUM.Regla ON promocion.promo_cod = regla.regla_cod;
+
+insert into LOREM_IPSUM.Categoria(
+	cat_cod,
+	cat_nombre
+)
+SELECT SUBSTRING(PRODUCTO_CATEGORIA, CHARINDEX('N°', PRODUCTO_CATEGORIA) + 2, LEN(PRODUCTO_CATEGORIA)), PRODUCTO_CATEGORIA
+FROM gd_esquema.Maestra
+where PRODUCTO_CATEGORIA is not null
+group by PRODUCTO_CATEGORIA;
+
+insert into LOREM_IPSUM.Subcategoria(
+	subcat_cod,
+	subcat_nombre
+)
+SELECT SUBSTRING(PRODUCTO_SUB_CATEGORIA, CHARINDEX('N°', PRODUCTO_SUB_CATEGORIA) + 2, LEN(PRODUCTO_SUB_CATEGORIA)), PRODUCTO_SUB_CATEGORIA
+FROM gd_esquema.Maestra
+where PRODUCTO_SUB_CATEGORIA is not null
+group by PRODUCTO_SUB_CATEGORIA;
+
+insert into LOREM_IPSUM.Marca_producto(
+	marca_cod,
+	marca_nombre
+)
+SELECT SUBSTRING(PRODUCTO_MARCA, CHARINDEX('N°', PRODUCTO_MARCA) + 2, LEN(PRODUCTO_MARCA)), PRODUCTO_MARCA
+FROM gd_esquema.Maestra
+where PRODUCTO_MARCA is not null
+group by PRODUCTO_MARCA;
+
+select * from LOREM_IPSUM.Marca_producto
+
+SELECT  SUBSTRING(PRODUCTO_NOMBRE, CHARINDEX(':', PRODUCTO_NOMBRE) + 1, LEN(PRODUCTO_NOMBRE)),  
+FROM gd_esquema.Maestra
+join LOREM_IPSUM.Categoria on PRODUCTO_CATEGORIA = cat_nombre
+join LOREM_IPSUM.Subcategoria on PRODUCTO_SUB_CATEGORIA = subcat_nombre
+join LOREM_IPSUM.Marca_producto on PRODUCTO_MARCA = marca_nombre
+
 
