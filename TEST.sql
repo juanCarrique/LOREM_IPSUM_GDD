@@ -920,24 +920,22 @@ insert into LOREM_IPSUM.Producto(
 SELECT PRODUCTO_NOMBRE, PRODUCTO_PRECIO, marca_cod, subcat_cod
 FROM gd_esquema.Maestra
 join LOREM_IPSUM.Marca_producto on marca_nombre = PRODUCTO_MARCA
---join LOREM_IPSUM.Categoria on cat_nombre = PRODUCTO_CATEGORIA
-join LOREM_IPSUM.Subcategoria on subcat_nombre = PRODUCTO_SUB_CATEGORIA
+join LOREM_IPSUM.Categoria on cat_nombre = PRODUCTO_CATEGORIA
+join LOREM_IPSUM.Subcategoria on subcat_nombre = PRODUCTO_SUB_CATEGORIA and subcat_cat = cat_cod
 where PRODUCTO_NOMBRE is not null
 group by PRODUCTO_NOMBRE,PRODUCTO_PRECIO,marca_cod, subcat_cod
 
 -- Migracion Prod_Promo
 insert into LOREM_IPSUM.Prod_Promo(
 	PP_prod_cod,
-	PP_prod_marca,
-	PP_prod_sub_cat,
 	PP_promo_cod,
 	PP_cant
 )
-select prod_cod, prod_marca, prod_sub_cat, promo_cod, count(*) 
+select prod_cod, promo_cod, count(*) 
 FROM gd_esquema.Maestra
 join LOREM_IPSUM.Marca_producto on marca_nombre = PRODUCTO_MARCA
 join LOREM_IPSUM.Categoria on PRODUCTO_CATEGORIA = cat_nombre
-join LOREM_IPSUM.Subcategoria on PRODUCTO_SUB_CATEGORIA = subcat_nombre
+join LOREM_IPSUM.Subcategoria on PRODUCTO_SUB_CATEGORIA = subcat_nombre and subcat_cat = cat_cod
 JOIN LOREM_IPSUM.Producto on PRODUCTO_NOMBRE = prod_nombre and prod_sub_cat = subcat_cod and prod_marca = marca_cod
 JOIN LOREM_IPSUM.Promocion ON promocion.promo_cod = PROMO_CODIGO
 group by prod_cod, prod_marca, prod_sub_cat, promo_cod;
@@ -952,27 +950,25 @@ insert into LOREM_IPSUM.Prod_Ticket(
 	PT_sucursal,
     PT_fecha,
     PT_prod_cod,
-	PT_prod_marca,
-	PT_prod_sub_cat,
     PT_cant,
     PT_precio,
     PT_descuento
 )
-select ticket_nro, ticket_tipo, ticket_sucursal ,ticket_fecha, prod_cod, prod_marca, prod_sub_cat, count(prod_cod), sum(prod_precio), 
+select ticket_nro, ticket_tipo, ticket_sucursal ,ticket_fecha, prod_cod,count(prod_cod), sum(prod_precio), 
 	(select sum(regla_descuento)
 		from LOREM_IPSUM.Prod_Promo
 		join LOREM_IPSUM.Promocion on promo_cod = PP_promo_cod
 		join LOREM_IPSUM.Promo_Regla on promo_cod = PR_promo
 		join LOREM_IPSUM.Regla on PR_regla = regla_cod
-		where PP_prod_cod = prod_cod  and PP_prod_sub_cat = prod_sub_cat and PP_prod_marca = prod_marca
-		group by PP_prod_cod, PP_prod_sub_cat, PP_prod_marca
+		where PP_prod_cod = prod_cod  
+		group by PP_prod_cod
 		)
 from gd_esquema.Maestra
 left JOIN LOREM_IPSUM.Sucursal ON SUCURSAL_NOMBRE = suc_nombre
 left JOIN LOREM_IPSUM.Ticket ON ticket_nro = TICKET_NUMERO AND ticket_sucursal = suc_cod AND ticket_tipo = TICKET_TIPO_COMPROBANTE AND ticket_fecha = TICKET_FECHA_HORA
 left join LOREM_IPSUM.Marca_producto on marca_nombre = PRODUCTO_MARCA
 left join LOREM_IPSUM.Categoria on PRODUCTO_CATEGORIA = cat_nombre
-left join LOREM_IPSUM.Subcategoria on PRODUCTO_SUB_CATEGORIA = subcat_nombre
+left join LOREM_IPSUM.Subcategoria on PRODUCTO_SUB_CATEGORIA = subcat_nombre and subcat_cat = cat_cod
 left JOIN LOREM_IPSUM.Producto on PRODUCTO_NOMBRE = prod_nombre and prod_sub_cat = subcat_cod and prod_marca = marca_cod
 where prod_cod is not null
 group by ticket_nro, ticket_tipo, ticket_sucursal ,ticket_fecha, prod_cod, prod_marca, prod_sub_cat
@@ -986,15 +982,13 @@ insert into LOREM_IPSUM.Promocion_x_ProductoTicket(
 	PPT_sucursal,
     PPT_fecha,
     PPT_prod_cod,
-	PPT_prod_marca,
-	PPT_prod_sub_cat,
 	PPT_promo,
     PPT_descuento
 )
-select PT_ticket, PT_tipo, PT_sucursal ,PT_fecha, PT_prod_cod, PT_prod_marca, PT_prod_sub_cat, PP_promo_cod, PT_descuento
+select PT_ticket, PT_tipo, PT_sucursal ,PT_fecha, PT_prod_cod, PT_descuento,PP_promo_cod
 from LOREM_IPSUM.Prod_Ticket
-join LOREM_IPSUM.Prod_Promo on PP_prod_cod = PT_prod_cod and PP_prod_marca = PT_prod_marca  and PP_prod_sub_cat = PT_prod_sub_cat
-group by  PT_ticket, PT_tipo, PT_sucursal ,PT_fecha, PT_prod_cod, PT_prod_marca, PT_prod_sub_cat, PP_promo_cod, PT_descuento
+join LOREM_IPSUM.Prod_Promo on PP_prod_cod = PT_prod_cod 
+group by  PT_ticket, PT_tipo, PT_sucursal ,PT_fecha, PT_prod_cod, PP_promo_cod, PT_descuento
 
 
 
