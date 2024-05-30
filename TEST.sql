@@ -102,20 +102,20 @@ GO
 -------------------- Creación de tablas ---------------------------
 
 CREATE TABLE LOREM_IPSUM.Provincia (
-    prov_cod        INT IDENTITY(1,1) NOT NULL,
+    prov_cod        SMALLINT IDENTITY(1,1)		NOT NULL,
     prov_nombre     NVARCHAR(55),
 );
 
 CREATE TABLE LOREM_IPSUM.Localidad(
-    localidad_cod       INT IDENTITY(1,1) NOT NULL,
-    localidad_prov      INT    NOT NULL,
+    localidad_cod       INT IDENTITY(1,1)		NOT NULL,
+    localidad_prov      SMALLINT				NOT NULL,
     localidad_nombre    NVARCHAR(55)
 )
 
 CREATE TABLE LOREM_IPSUM.Supermercado(
-	super_cod				INT IDENTITY(1,1) NOT NULL,
-    super_cuit              NVARCHAR(13) NOT NULL,
-    super_localidad         INT NOT NULL,
+	super_cod				INT IDENTITY(1,1)	NOT NULL,
+    super_cuit              NVARCHAR(13)		NOT NULL,
+    super_localidad         INT					NOT NULL,
     super_nombre            NVARCHAR(255),
     super_iibb              NVARCHAR(255),
     super_domicilio         NVARCHAR(255),
@@ -125,43 +125,44 @@ CREATE TABLE LOREM_IPSUM.Supermercado(
 )
 
 CREATE TABLE LOREM_IPSUM.Sucursal(
-    suc_cod         INT IDENTITY(1,1) NOT NULL,
-    suc_localidad   INT NOT NULL,
-    suc_super       INT NOT NULL,
+    suc_cod         INT IDENTITY(1,1)			NOT NULL,
+    suc_localidad   INT							NOT NULL,
+    suc_super       INT							NOT NULL,
     suc_nombre      NVARCHAR(255),
     suc_direccion   NVARCHAR(255)
 
 )
 
 CREATE TABLE LOREM_IPSUM.Tipo_Caja(
-    TC_cod         INT IDENTITY(1,1) NOT NULL,
+    TC_cod         INT IDENTITY(1,1)			NOT NULL,
     TC_detalle     NVARCHAR(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Caja(
-    caja_numero     DECIMAL(10,0) NOT NULL,
-    caja_tipo       INT NOT NULL,
-    caja_sucursal   INT NOT NULL
+    caja_numero     SMALLINT					NOT NULL,
+    caja_tipo       INT							NOT NULL,
+    caja_sucursal   INT							NOT NULL
 )
 
 CREATE TABLE LOREM_IPSUM.Empleado(
-    emp_sucursal            INT NOT NULL,
+	emp_dni                 INT					NOT NULL,
+    emp_sucursal            INT					NOT NULL,
     emp_nombre              NVARCHAR(255),
     emp_apellido            NVARCHAR(255),
-    emp_dni                 DECIMAL(10,0) NOT NULL,
     emp_fecha_registro      DATE,
     emp_telefono            NVARCHAR(9),
+	emp_mail				NVARCHAR(255),
     emp_fecha_nacimiento    DATE
 )
 
 CREATE TABLE LOREM_IPSUM.Ticket(
-    ticket_nro              DECIMAL(10,0) NOT NULL,
-    ticket_tipo             CHAR		  NOT NULL,
-    ticket_empleado         DECIMAL(10,0) NOT NULL,
-    ticket_cliente          DECIMAL(10,0),
-    ticket_caja             DECIMAL(10,0) NOT NULL,
-	ticket_sucursal			INT			  NOT NULL,
-    ticket_fecha            DATETIME NOT NULL,
+    ticket_nro              INT					NOT NULL,
+    ticket_tipo             CHAR				NOT NULL,
+    ticket_empleado         INT					NOT NULL,
+    ticket_cliente          INT,		
+    ticket_caja             SMALLINT			NOT NULL,
+	ticket_sucursal			INT					NOT NULL,
+    ticket_fecha            DATETIME			NOT NULL,
     ticket_subtotal         DECIMAL(10,2),
     ticket_desc_promociones DECIMAL(10,2),
 	ticket_desc_medio_pago  DECIMAL(10,2),
@@ -169,110 +170,110 @@ CREATE TABLE LOREM_IPSUM.Ticket(
 )
 
 CREATE TABLE LOREM_IPSUM.Marca_producto(
-    marca_cod       DECIMAL(10,0) NOT NULL,
+    marca_cod       BIGINT						NOT NULL,
     marca_nombre    NVARCHAR(255)
 )
 
 CREATE TABLE LOREM_IPSUM.Categoria(
-    cat_cod     DECIMAL(10,0) NOT NULL,
+    cat_cod     INT								NOT NULL,
     cat_nombre  NVARCHAR(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Subcategoria(
-    subcat_cod      DECIMAL(10,0) NOT NULL,
-	--subcat_cat	  INT NOT NULL,
+    subcat_cod      INT							NOT NULL,
+	--subcat_cat	  INT						  NOT NULL,
     subcat_nombre   NVARCHAR(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Regla(
-    regla_cod				INT identity(1,1) NOT NULL,
+    regla_cod				INT identity(1,1)	NOT NULL,
     regla_descripcion       NVARCHAR(255),
     regla_descuento         DECIMAL(3,2),
-    regla_cant_aplicable    DECIMAL(10,0),
-    regla_cant_ap_desc      DECIMAL(10,0),
-    regla_cant_maxima       DECIMAL(10,0),
+    regla_cant_aplicable    SMALLINT,
+    regla_cant_ap_desc      SMALLINT,
+    regla_cant_maxima       SMALLINT,
     regla_misma_marca       BIT,
     regla_mismo_prod        BIT
 )
 
 CREATE TABLE LOREM_IPSUM.Promo_Regla(
-    PR_promo       DECIMAL(10,0),
-    PR_regla	   INT NOT NULL
+    PR_promo       INT							NOT NULL,
+    PR_regla	   INT							NOT NULL
 )
 
 CREATE TABLE LOREM_IPSUM.Promocion(
-    promo_cod           DECIMAL(10,0) NOT NULL,
+    promo_cod           INT						NOT NULL,
     promo_descripcion   NVARCHAR(255),
     promo_inicio        DATE,
     promo_fin           DATE
 )
 
 CREATE TABLE LOREM_IPSUM.Prod_Promo(
-    PP_prod_cod     DECIMAL(12,0) NOT NULL,
-    PP_promo_cod    DECIMAL(10,0) NOT NULL,
-	PP_prod_marca	DECIMAL(10,0) NOT NULL,
-	PP_prod_cat		DECIMAL(10,0) NOT NULL,
-	PP_prod_sub_cat		DECIMAL(10,0) NOT NULL,
-    PP_cant         DECIMAL(3,0) NOT NULL
+    PP_prod_cod     BIGINT						NOT NULL,
+    PP_promo_cod    INT							NOT NULL,
+	PP_prod_marca	BIGINT						NOT NULL,
+	PP_prod_cat		INT							NOT NULL,
+	PP_prod_sub_cat	INT							NOT NULL,
+    PP_cant         SMALLINT					NOT NULL
 )
 
 
 CREATE TABLE LOREM_IPSUM.Producto(
-    prod_cod        DECIMAL(12,0) NOT NULL,
-	prod_marca      DECIMAL(10,0) NOT NULL,
-	prod_cat		DECIMAL(10,0) NOT NULL,
-    prod_sub_cat    DECIMAL(10,0) NOT NULL,
+    prod_cod        BIGINT						NOT NULL,
+	prod_marca      BIGINT						NOT NULL,
+	prod_cat		INT							NOT NULL,
+    prod_sub_cat    INT							NOT NULL,
     prod_nombre     NVARCHAR(255),
-    prod_precio     DECIMAL(18,2) NOT NULL
+    prod_precio     DECIMAL(18,2)				NOT NULL
 )
 
 CREATE TABLE LOREM_IPSUM.Prod_Ticket(
-    PT_ticket		 DECIMAL(10,0) NOT NULL,
-    PT_fecha		 DATETIME NOT NULL,
-	PT_sucursal		 INT	NOT NULL,
-    PT_prod_cod		 DECIMAL(12,0) NOT NULL,
-	PT_prod_marca	 DECIMAL(10,0) NOT NULL,
-	PT_prod_cat		 DECIMAL(10,0) NOT NULL,
-	PT_prod_sub_cat	 DECIMAL(10,0) NOT NULL,
-    PT_tipo			 CHAR NOT NULL,	
-    PT_cant			 DECIMAL(3,0) NOT NULL,
+    PT_ticket		 INT						NOT NULL,
+    PT_fecha		 DATETIME					NOT NULL,
+	PT_sucursal		 INT						NOT NULL,
+    PT_prod_cod		 BIGINT						NOT NULL,
+	PT_prod_marca	 BIGINT						NOT NULL,
+	PT_prod_cat		 INT						NOT NULL,
+	PT_prod_sub_cat	 INT						NOT NULL,
+    PT_tipo			 CHAR						NOT NULL,	
+    PT_cant			 SMALLINT					NOT NULL,
     PT_precio		 DECIMAL(18,2),
     PT_descuento	 DECIMAL(18,2),
 )
 
 CREATE TABLE LOREM_IPSUM.Promocion_x_ProductoTicket(
-    PPT_ticket		 DECIMAL(10,0) NOT NULL,
-    PPT_fecha		 DATETIME NOT NULL,
-	PPT_sucursal	 INT	NOT NULL,
-    PPT_prod_cod	 DECIMAL(12,0) NOT NULL,
-	PPT_prod_marca	 DECIMAL(10,0) NOT NULL,
-	PPT_prod_cat	 DECIMAL(10,0) NOT NULL,
-	PPT_prod_sub_cat DECIMAL(10,0) NOT NULL,
-    PPT_tipo		 CHAR NOT NULL,	
-    PPT_promo		 DECIMAL(10,0) NOT NULL,
+    PPT_ticket		 INT						NOT NULL,
+    PPT_fecha		 DATETIME					NOT NULL,
+	PPT_sucursal	 INT						NOT NULL,
+    PPT_prod_cod	 BIGINT						NOT NULL,
+	PPT_prod_marca	 BIGINT						NOT NULL,
+	PPT_prod_cat	 INT						NOT NULL,
+	PPT_prod_sub_cat INT						NOT NULL,
+    PPT_tipo		 CHAR						NOT NULL,	
+    PPT_promo		 INT						NOT NULL,
     PPT_descuento	 DECIMAL(18,2)
 )
 
 
 CREATE TABLE LOREM_IPSUM.Programacion_Envio(
-    prog_env_codigo                  DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
-    prog_env_fecha_programacion      DATE,
-    prog_env_hs_inicio               DECIMAL(2,0),
-    prog_env_hr_fin                  DECIMAL(2,0)
+    prog_env_codigo             INT IDENTITY(1,1) NOT NULL,
+    prog_env_fecha_programacion DATE,
+    prog_env_hs_inicio          SMALLINT,
+    prog_env_hr_fin             SMALLINT
 )
 
 
 CREATE TABLE LOREM_IPSUM.Estado_Envio(
-    estado_env_cod      DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
+    estado_env_cod      INT IDENTITY(1,1)		NOT NULL,
     estado_env_detalle  NVARCHAR(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Cliente(
-    clie_nro                DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
-    clie_localidad          INT NOT NULL,
+    clie_nro                INT IDENTITY(1,1)	NOT NULL,
+    clie_localidad          INT					NOT NULL,
     clie_nombre             NVARCHAR(50),
     clie_apellido           NVARCHAR(50),
-    clie_dni                DECIMAL(10,0),
+    clie_dni                INT,
     clie_fecha_nacimiento   DATE,
     clie_fecha_registro     DATE,
     clie_mail               NVARCHAR(50),
@@ -280,43 +281,42 @@ CREATE TABLE LOREM_IPSUM.Cliente(
 )
 
 CREATE TABLE LOREM_IPSUM.Envio(
-    envio_nro                   DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
-    envio_ticket                DECIMAL(10,0) NOT NULL,
-	envio_ticket_sucursal		INT NOT NULL, 
-	envio_ticket_tipo			CHAR NOT NULL,
-    envio_ticket_fecha            DATETIME NOT NULL,
-    envio_clie                  DECIMAL(10,0) NOT NULL,
-    envio_programacion          DECIMAL(10,0) NOT NULL,
-    envio_costo                 DECIMAL(10,0),
+    envio_nro                   INT IDENTITY(1,1)	NOT NULL,
+    envio_ticket                INT					NOT NULL,
+	envio_ticket_sucursal		INT					NOT NULL, 
+	envio_ticket_tipo			CHAR				NOT NULL,
+    envio_ticket_fecha          DATETIME			NOT NULL,
+    envio_clie                  INT					NOT NULL,
+    envio_programacion          INT					NOT NULL,
+    envio_costo                 INT,
     envio_estado                DECIMAL
 )
 
 CREATE TABLE LOREM_IPSUM.Tarjeta(
-    tarjeta_nro         NVARCHAR(10)    NOT NULL,
-    tarjeta_clie        DECIMAL(10,0),
+    tarjeta_nro         NVARCHAR(10)				NOT NULL,
+    tarjeta_clie        INT,
     tarjeta_vto         DATE,
-    tarjeta_detalle     DECIMAL(10,0)
+    tarjeta_detalle     INT
 )
 
-
 CREATE TABLE LOREM_IPSUM.Tipo_Medio_Pago(
-    TMP_tipo        DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
+    TMP_tipo        INT IDENTITY(1,1)				NOT NULL,
     TMP_detalle     NVARCHar(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Medio_pago(
-    MP_cod         DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
-    MP_tipo        DECIMAL(10,0) NOT NULL,
+    MP_cod         INT IDENTITY(1,1)				NOT NULL,
+    MP_tipo        INT								NOT NULL,
     MP_detalle     NVARCHAR(50)
 )
 
 CREATE TABLE LOREM_IPSUM.Pago(
-    pago_nro                DECIMAL(10,0) IDENTITY(1,1) NOT NULL,
-    pago_mp                 DECIMAL(10,0) NOT NULL,
-    pago_ticket             DECIMAL(10,0) NOT NULL,
-	pago_ticket_tipo		CHAR NOT NULL,
-	pago_ticket_sucursal	INT NOT NULL,
-    pago_ticket_fecha            DATETIME NOT NULL,
+    pago_nro                INT IDENTITY(1,1)		NOT NULL,
+    pago_mp                 INT						NOT NULL,
+    pago_ticket             INT						NOT NULL,
+	pago_ticket_tipo		CHAR					NOT NULL,
+	pago_ticket_sucursal	INT						NOT NULL,
+    pago_ticket_fecha       DATETIME				NOT NULL,
     pago_tarjeta            NVARCHAR(10),
     pago_fecha              DATETIME,
     pago_importe            DECIMAL(18,2),
@@ -325,8 +325,8 @@ CREATE TABLE LOREM_IPSUM.Pago(
 
 
 CREATE TABLE LOREM_IPSUM.Descuento_Medio_pago(
-    desc_cod               DECIMAL(10,0) NOT NULL,
-    desc_medio_pago        DECIMAL(10,0) NOT NULL,
+    desc_cod               INT						NOT NULL,
+    desc_medio_pago        INT						NOT NULL,
     desc_descripcion       NVARCHAR(50),
     desc_medio_pago_inicio DATE,
     desc_medio_pago_fin    DATE,
@@ -335,8 +335,8 @@ CREATE TABLE LOREM_IPSUM.Descuento_Medio_pago(
 )
 
 CREATE TABLE LOREM_IPSUM.Descuento_MP_Aplicado(
-    desc_MP_apli_pago       DECIMAL(10,0) NOT NULL,
-    desc_MP_apli_descuento  DECIMAL(10,0) NOT NULL,
+    desc_MP_apli_pago       INT						NOT NULL,
+    desc_MP_apli_descuento  INT						NOT NULL,
     desc_MP_apli_monto      DECIMAL(8,2)
 )
 
@@ -572,7 +572,7 @@ ADD CONSTRAINT FK_Desc_MP_Aplicado_Descuento
 FOREIGN KEY (desc_MP_apli_descuento) REFERENCES LOREM_IPSUM.Descuento_Medio_pago(desc_cod);
 
 
---  Migración de tablas 
+--------------------------- Migración de tablas ---------------------------
 
 
 
@@ -647,8 +647,8 @@ where CAJA_NUMERO is not null
 
 -- Migración de Empleado
 
-INSERT INTO LOREM_IPSUM.Empleado(emp_apellido, emp_dni, emp_nombre, emp_fecha_nacimiento, emp_fecha_registro, emp_sucursal, emp_telefono)
-select distinct EMPLEADO_APELLIDO, EMPLEADO_DNI, EMPLEADO_NOMBRE, EMPLEADO_FECHA_NACIMIENTO, EMPLEADO_FECHA_REGISTRO, suc_cod, EMPLEADO_TELEFONO from gd_esquema.Maestra
+INSERT INTO LOREM_IPSUM.Empleado(emp_apellido, emp_dni, emp_nombre, emp_fecha_nacimiento, emp_fecha_registro, emp_sucursal, emp_telefono, emp_mail)
+select distinct EMPLEADO_APELLIDO, EMPLEADO_DNI, EMPLEADO_NOMBRE, EMPLEADO_FECHA_NACIMIENTO, EMPLEADO_FECHA_REGISTRO, suc_cod, EMPLEADO_TELEFONO, EMPLEADO_MAIL from gd_esquema.Maestra
 join LOREM_IPSUM.Sucursal on suc_nombre = SUCURSAL_NOMBRE
 where EMPLEADO_DNI is not null
 
@@ -893,7 +893,6 @@ SELECT SUBSTRING(PRODUCTO_CATEGORIA, CHARINDEX('N°', PRODUCTO_CATEGORIA) + 2, L
 FROM gd_esquema.Maestra
 where PRODUCTO_CATEGORIA is not null
 group by PRODUCTO_CATEGORIA;
-
 --migracion subcategoria
 insert into LOREM_IPSUM.Subcategoria(
 	subcat_cod,
