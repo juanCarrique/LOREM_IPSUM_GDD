@@ -986,8 +986,10 @@ insert into LOREM_IPSUM.Promocion_x_ProductoTicket(
     PPT_descuento
 )
 select PT_ticket, PT_tipo, PT_sucursal ,PT_fecha, PT_prod_cod, PT_descuento,PP_promo_cod
-from LOREM_IPSUM.Prod_Ticket
-join LOREM_IPSUM.Prod_Promo on PP_prod_cod = PT_prod_cod 
+from gd_esquema.Maestra
+JOIN LOREM_IPSUM.Sucursal ON SUCURSAL_NOMBRE = suc_nombre
+join LOREM_IPSUM.Prod_Ticket on  PT_ticket = TICKET_NUMERO AND PT_sucursal = suc_cod AND PT_tipo = TICKET_TIPO_COMPROBANTE AND PT_fecha = TICKET_FECHA_HORA
+join LOREM_IPSUM.Prod_Promo on PP_prod_cod = PT_prod_cod and PROMO_CODIGO = PP_promo_cod
 group by  PT_ticket, PT_tipo, PT_sucursal ,PT_fecha, PT_prod_cod, PP_promo_cod, PT_descuento
 
 
