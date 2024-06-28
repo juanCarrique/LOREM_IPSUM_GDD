@@ -283,6 +283,7 @@ CREATE TABLE LOREM_IPSUM.Envio(
 	envio_ticket_tipo			CHAR				NOT NULL,
     envio_ticket_fecha          DATETIME			NOT NULL,
     envio_clie                  INT					NOT NULL,
+    envio_fecha_entrega         DATETIME,
     envio_programacion          INT					NOT NULL,
     envio_costo                 INT,
     envio_estado                DECIMAL
@@ -804,9 +805,10 @@ GROUP BY PAGO_DESCUENTO_APLICADO, pago_nro, DESCUENTO_CODIGO
 
 -- Migración de Envio (necesita migrada -> Cliente, Programacion_Envio, Estado_Envio)
 
-INSERT INTO LOREM_IPSUM.Envio (envio_costo, envio_ticket, envio_ticket_sucursal, envio_ticket_tipo, envio_ticket_fecha, envio_clie, envio_programacion, envio_estado)
+INSERT INTO LOREM_IPSUM.Envio (envio_costo, envio_fecha_entrega, envio_ticket, envio_ticket_sucursal, envio_ticket_tipo, envio_ticket_fecha, envio_clie, envio_programacion, envio_estado)
 
 SELECT ENVIO_COSTO,
+       ENVIO_FECHA_ENTREGA,
        ticket_nro,
        ticket_sucursal,
        ticket_tipo,
@@ -825,7 +827,7 @@ FROM gd_esquema.Maestra
          JOIN LOREM_IPSUM.Cliente ON clie_dni = CLIENTE_DNI
          JOIN LOREM_IPSUM.Estado_Envio ON estado_env_detalle = ENVIO_ESTADO
 WHERE ENVIO_COSTO IS NOT NULL
-GROUP BY ENVIO_COSTO, ticket_nro, ticket_sucursal, ticket_tipo, ticket_fecha, clie_nro, prog_env_codigo, estado_env_cod
+GROUP BY ENVIO_COSTO, ENVIO_FECHA_ENTREGA, ticket_nro, ticket_sucursal, ticket_tipo, ticket_fecha, clie_nro, prog_env_codigo, estado_env_cod
 
 
 -- migracion regla
