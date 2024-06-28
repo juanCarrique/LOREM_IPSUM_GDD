@@ -978,21 +978,32 @@ group by ticket_nro, ticket_tipo, ticket_sucursal ,ticket_fecha, prod_cod, prod_
 
 
 --Migracion de Promocion_x_ProductoTicket
-insert into LOREM_IPSUM.Promocion_x_ProductoTicket(
-	PPT_ticket,
-    PPT_tipo,
-	PPT_sucursal,
-    PPT_fecha,
-    PPT_prod_cod,
-	PPT_promo,
-    PPT_descuento
-)
-select PT_ticket, PT_tipo, PT_sucursal ,PT_fecha, PT_prod_cod, PT_descuento,PP_promo_cod
-from gd_esquema.Maestra
-JOIN LOREM_IPSUM.Sucursal ON SUCURSAL_NOMBRE = suc_nombre
-join LOREM_IPSUM.Prod_Ticket on  PT_ticket = TICKET_NUMERO AND PT_sucursal = suc_cod AND PT_tipo = TICKET_TIPO_COMPROBANTE AND PT_fecha = TICKET_FECHA_HORA
-join LOREM_IPSUM.Prod_Promo on PP_prod_cod = PT_prod_cod and PROMO_CODIGO = PP_promo_cod
-group by  PT_ticket, PT_tipo, PT_sucursal ,PT_fecha, PT_prod_cod, PP_promo_cod, PT_descuento
+INSERT INTO LOREM_IPSUM.Promocion_x_ProductoTicket(PPT_ticket,
+                                                   PPT_tipo,
+                                                   PPT_sucursal,
+                                                   PPT_fecha,
+                                                   PPT_prod_cod,
+                                                   PPT_promo,
+                                                   PPT_descuento)
+SELECT PT.PT_ticket,
+       PT.PT_tipo,
+       PT.PT_sucursal,
+       PT.PT_fecha,
+       PT.PT_prod_cod,
+       PP_promo_cod,
+       PT.PT_descuento
+FROM LOREM_IPSUM.Prod_Ticket PT
+         JOIN LOREM_IPSUM.Producto P ON P.prod_cod = PT.PT_prod_cod
+         JOIN LOREM_IPSUM.Sucursal ON PT_sucursal = suc_cod
+         JOIN gd_esquema.Maestra
+              ON TICKET_NUMERO = PT_ticket AND TICKET_FECHA_HORA = PT_fecha AND PT_tipo = TICKET_TIPO_COMPROBANTE AND
+                 PRODUCTO_NOMBRE = prod_nombre AND suc_nombre = SUCURSAL_NOMBRE
+         JOIN LOREM_IPSUM.Prod_Promo ON PP_promo_cod = PROMO_CODIGO
+WHERE PROMO_CODIGO IS NOT NULL
+  AND PROMO_APLICADA_DESCUENTO > 0
+GROUP BY PT.PT_ticket, PT.PT_fecha, PT.PT_tipo, PT.PT_sucursal, PT.PT_prod_cod, PT.PT_descuento, PP_promo_cod
+
+
 
 
 
