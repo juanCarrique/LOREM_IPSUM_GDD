@@ -1002,8 +1002,3 @@ FROM LOREM_IPSUM.Prod_Ticket PT
 WHERE PROMO_CODIGO IS NOT NULL
   AND PROMO_APLICADA_DESCUENTO > 0
 GROUP BY PT.PT_ticket, PT.PT_fecha, PT.PT_tipo, PT.PT_sucursal, PT.PT_prod_cod, PT.PT_descuento, PP_promo_cod
-
-
-
-
-
