@@ -265,12 +265,9 @@ CREATE TABLE LOREM_IPSUM.BI_H_ENVIOS(
 CREATE TABLE LOREM_IPSUM.BI_H_PROMOCION(
     PROMO_ID            INT IDENTITY(1,1) NOT NULL,
     PROMO_TIEMPO        SMALLINT NOT NULL,
-PROMO_SUBCATEGORIA  INT NOT NULL,
-PROMO_CATEGORIA INT NOT NULL,
+	PROMO_SUBCATEGORIA  INT NOT NULL,
+	PROMO_CATEGORIA		INT NOT NULL,
     PROMO_DESCUENTO     DECIMAL(18,2) NOT NULL,
-    --PROMO_MONTO         DECIMAL(18,2) NOT NULL,
-    --PROMO_SUCURSAL      SMALLINT NOT NULL,
-    --PROMO_UBICACION     SMALLINT NOT NULL,
 )
 
 -------------------- Creación de primary keys ---------------------------
@@ -652,6 +649,11 @@ GO
 
 
 -- Migracion Envios
+
+
+
+
+
 create procedure LOREM_IPSUM.BI_MIGRAR_H_ENVIOS
 as
 begin
@@ -661,7 +663,7 @@ SELECT TIEMPO_ID, UBI_ID,LOREM_IPSUM.CALCULAR_RANGO_ETARIO(clie_fecha_nacimiento
 FROM LOREM_IPSUM.Envio 
 JOIN LOREM_IPSUM.Programacion_Envio on prog_env_codigo = envio_programacion
 join LOREM_IPSUM.BI_D_TIEMPO on year(envio_fecha_entrega) = TIEMPO_ANIO and month(envio_fecha_entrega) = TIEMPO_MES and DATEPART(Q, envio_fecha_entrega) = TIEMPO_CUATRIMESTRE
-JOIN LOREM_IPSUM.Ticket on envio_ticket = ticket_nro
+JOIN LOREM_IPSUM.Ticket on envio_ticket = ticket_nro and envio_ticket_sucursal = ticket_sucursal and envio_ticket_tipo = ticket_tipo and envio_ticket_fecha = ticket_fecha
 join LOREM_IPSUM.Sucursal on ticket_sucursal = suc_cod
 join LOREM_IPSUM.BI_D_SUCURSAL on SUCURSAL_DETALLE = suc_nombre
 join LOREM_IPSUM.Cliente on clie_nro = ticket_cliente
@@ -672,6 +674,8 @@ group by TIEMPO_ID, clie_fecha_nacimiento, envio_fecha_entrega, prog_env_hr_fin,
 )
 end
 GO
+
+
 -- Migración Pagos
 
 CREATE PROCEDURE LOREM_IPSUM.BI_MIGRAR_H_PAGOS
@@ -884,6 +888,15 @@ GROUP BY MP_DETALLE
 GO
 
 
+--select * from LOREM_IPSUM.VIEW_1
+--select * from LOREM_IPSUM.VIEW_2
 --select * from LOREM_IPSUM.VIEW_3
+--select * from LOREM_IPSUM.VIEW_4
+--select * from LOREM_IPSUM.VIEW_5
+--select * from LOREM_IPSUM.VIEW_6
+--select * from LOREM_IPSUM.VIEW_7
+--select * from LOREM_IPSUM.VIEW_8
+--select * from LOREM_IPSUM.VIEW_9
+--select * from LOREM_IPSUM.VIEW_10
 --select * from LOREM_IPSUM.VIEW_11
---select * from LOREM_IPSUM.VIEW_12
+--select * from LOREM_IPSUM.VIEW_12;
