@@ -818,7 +818,7 @@ SELECT
                 T2.TIEMPO_ANIO = T1.TIEMPO_ANIO 
                 AND T2.TIEMPO_MES = T1.TIEMPO_MES 
                 AND S1.SUCURSAL_ID = E2.ENV_SUCURSAL 
-                AND E2.ENV_ATRASADO = 'En tiempo' 
+                AND E2.ENV_ATRASADO = 0
             GROUP BY E2.ENV_SUCURSAL 
         ) * 100.0 / COUNT(E1.ENV_ID)
     ) AS 'Porcentaje cumplimiento'
@@ -849,7 +849,8 @@ GO
 CREATE VIEW LOREM_IPSUM.VIEW_9 AS
 SELECT top 5 UBI_LOCALIDAD FROM LOREM_IPSUM.BI_H_ENVIOS
 JOIN LOREM_IPSUM.BI_D_UBICACION ON ENV_UBICACION = UBI_ID
-GO
+order by ENV_COSTO desc
+GO 
 
 --10--T1
 CREATE VIEW LOREM_IPSUM.VIEW_10 AS
@@ -898,9 +899,9 @@ GO
 --select * from LOREM_IPSUM.VIEW_4
 --select * from LOREM_IPSUM.VIEW_5
 --select * from LOREM_IPSUM.VIEW_6
---select * from LOREM_IPSUM.VIEW_7
---select * from LOREM_IPSUM.VIEW_8
---select * from LOREM_IPSUM.VIEW_9
+select * from LOREM_IPSUM.VIEW_7
+select * from LOREM_IPSUM.VIEW_8
+select * from LOREM_IPSUM.VIEW_9
 --select * from LOREM_IPSUM.VIEW_10
 --select * from LOREM_IPSUM.VIEW_11
 --select * from LOREM_IPSUM.VIEW_12;
